@@ -9,6 +9,7 @@
         "nodes": [
           {
 						"nodeType": "docker",
+            "extip": false,
 						"displayName": "das",
 						"nodeGroup": "das",
 						"cloudlets": 32,
@@ -24,6 +25,7 @@
 					},
           {
 						"nodeType": "docker",
+            "extip": false,
 						"displayName": "node1",
 						"nodeGroup": "node1",
 						"cloudlets": 24,
@@ -37,6 +39,7 @@
 					},
           {
 						"nodeType": "docker",
+            "extip": false,
 						"displayName": "node2",
 						"nodeGroup": "node2",
 						"cloudlets": 24,
@@ -50,6 +53,7 @@
 					},
           {
             "nodeType": "docker",
+            "extip": true,
 						"displayName": "nginx",
 						"nodeGroup": "nginx",
 						"cloudlets": 8,
@@ -57,7 +61,7 @@
               "image": "andretadeu/simple-nginx-load-balancer",
               "links": [ "das:host0", "node1:host1", "node2:host2" ],
               "env": {
-                "HOSTS": "das:8080 node-1:28080 node-2:28080"
+                "HOSTS": "host0_1:8080 host1_1:28080 host2_1:28080"
               },
               "registry": {
 								"url": "registry.hub.docker.com"
