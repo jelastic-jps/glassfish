@@ -9,9 +9,9 @@
         "nodes": [
           {
 						"nodeType": "docker",
-						"displayName": "glassfish",
-						"nodeGroup": "glassfish",
-						"cloudlets": 16,
+						"displayName": "das",
+						"nodeGroup": "das",
+						"cloudlets": 32,
 						"docker": {
 							"image": "andretadeu/glassfish",
               "env": {
@@ -24,9 +24,9 @@
 					},
           {
 						"nodeType": "docker",
-						"displayName": "glassfish",
-						"nodeGroup": "glassfish",
-						"cloudlets": 16,
+						"displayName": "node1",
+						"nodeGroup": "node1",
+						"cloudlets": 24,
 						"docker": {
 							"image": "andretadeu/glassfish",
               "links": [ "das:das" ],
@@ -37,9 +37,9 @@
 					},
           {
 						"nodeType": "docker",
-						"displayName": "glassfish",
-						"nodeGroup": "glassfish",
-						"cloudlets": 16,
+						"displayName": "node2",
+						"nodeGroup": "node2",
+						"cloudlets": 24,
 						"docker": {
 							"image": "andretadeu/glassfish",
               "links": [ "das:das" ],
@@ -55,7 +55,7 @@
 						"cloudlets": 8,
             "docker": {
               "image": "andretadeu/simple-nginx-load-balancer",
-              "links": [ "das:host0", "node-1:host1", "node-2:host2"],
+              "links": [ "das:host0", "node1:host1", "node2:host2" ],
               "env": {
                 "HOSTS": "das:8080 node-1:28080 node-2:28080"
               },
@@ -78,6 +78,12 @@
         {
           "procedure": "script",
           "params": {
+            "displayName": "glassfish"
+          }
+        },
+        {
+          "procedure": "script",
+          "params": {
             "displayName": "nginx"
           }
         }
@@ -88,7 +94,7 @@
         "onCall": [{
             "executeShellCommands": [{
                 "nodeType": "docker",
-                                "extip": false,
+                "extip": false,
                 "commands": [
                     "wget \"http://owncloud.demo.jelastic.com/public.php?service=files&t=0145724036b8eca918b68860052083f9&download\" -O /etc/init.d/jelinit 2>&1",
                     "chmod a+x /etc/init.d/jelinit"
