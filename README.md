@@ -1,4 +1,4 @@
-# jelastic-jenkins-cluster
+# jee-cluster
 Jelastic JPS file to define an importable environment.
 
 ## How to use
@@ -13,6 +13,7 @@ In the next dialog, set the name of the environment, the region, and click in
 'Install' button.
 
 Finally, you just have to wait Jelastic create the environment for you. To
-access Jenkins control panel, you just have to click in the button 'Open in
-browser' buton in 'jenkins' subitem of andretadeu/jenkins. The button is the
-first from the left to the right.
+access Glassfish control panel, you need to get the URL of the DAS container,
+and type the following in your web browser location bar:
+
+- https://[DAS container URL]:4848
