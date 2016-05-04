@@ -1,123 +1,123 @@
 {
-  "jpsType": "install",
-  "jpsVersion": "0.7",
-  "application": {
-		"name": "Glassfish Cluster",
-		"version": "1.0.0",
-    "env": {
-			"topology": {
-        "nodes": [
-          {
-						"nodeType": "docker",
-            "extip": false,
-						"displayName": "das",
-						"nodeGroup": "das",
-						"cloudlets": 32,
-						"docker": {
-							"image": "andretadeu/glassfish",
-              "env": {
-                "DAS": "true"
-              },
-							"registry": {
-								"url": "registry.hub.docker.com"
-							}
-						}
-					},
-          {
-						"nodeType": "docker",
-            "extip": false,
-						"displayName": "node1",
-						"nodeGroup": "node1",
-						"cloudlets": 24,
-						"docker": {
-							"image": "andretadeu/glassfish",
-              "links": [ "das:das" ],
-							"registry": {
-								"url": "registry.hub.docker.com"
-							}
-						}
-					},
-          {
-						"nodeType": "docker",
-            "extip": false,
-						"displayName": "node2",
-						"nodeGroup": "node2",
-						"cloudlets": 24,
-						"docker": {
-							"image": "andretadeu/glassfish",
-              "links": [ "das:das" ],
-							"registry": {
-								"url": "registry.hub.docker.com"
-							}
-						}
-					},
-          {
-            "nodeType": "docker",
-            "extip": true,
-						"displayName": "nginx",
-						"nodeGroup": "nginx",
-						"cloudlets": 8,
-            "docker": {
-              "image": "andretadeu/simple-nginx-load-balancer",
-              "links": [ "das:host0", "node1:host1", "node2:host2" ],
-              "env": {
-                "HOSTS": "host0_1:8080 host1_1:28080 host2_1:28080"
-              },
-              "registry": {
-								"url": "registry.hub.docker.com"
-							}
+    "jpsType": "install",
+    "jpsVersion": "0.7",
+    "application": {
+        "name": "Glassfish Cluster",
+        "version": "1.0.0",
+        "env": {
+            "topology": {
+                "nodes": [
+                    {
+                        "nodeType": "docker",
+                        "extip": false,
+                        "displayName": "das",
+                        "nodeGroup": "das",
+                        "cloudlets": 32,
+                        "docker": {
+                            "image": "andretadeu/glassfish",
+                            "env": {
+                                "DAS": "true"
+                            },
+                            "registry": {
+                                "url": "registry.hub.docker.com"
+                            }
+                        }
+                    },
+                    {
+                        "nodeType": "docker",
+                        "extip": false,
+                        "displayName": "node1",
+                        "nodeGroup": "node1",
+                        "cloudlets": 24,
+                        "docker": {
+                            "image": "andretadeu/glassfish",
+                            "links": ["das:das"],
+                            "registry": {
+                                "url": "registry.hub.docker.com"
+                            }
+                        }
+                    },
+                    {
+                        "nodeType": "docker",
+                        "extip": false,
+                        "displayName": "node2",
+                        "nodeGroup": "node2",
+                        "cloudlets": 24,
+                        "docker": {
+                            "image": "andretadeu/glassfish",
+                            "links": ["das:das"],
+                            "registry": {
+                                "url": "registry.hub.docker.com"
+                            }
+                        }
+                    },
+                    {
+                        "nodeType": "docker",
+                        "extip": true,
+                        "displayName": "nginx",
+                        "nodeGroup": "nginx",
+                        "cloudlets": 8,
+                        "docker": {
+                            "image": "andretadeu/simple-nginx-load-balancer",
+                            "links": ["das:host0", "node1:host1", "node2:host2"],
+                            "env": {
+                                "HOSTS": "host0_1:8080 host1_1:28080 host2_1:28080"
+                            },
+                            "registry": {
+                                "url": "registry.hub.docker.com"
+                            }
+                        }
+                    }
+                ]
             }
-          }
-        ]
-      }
-    },
-    "onInstall": {
-      "call": [
-        {
-          "procedure": "script",
-          "params": {
-            "displayName": "glassfish"
-          }
         },
-        {
-          "procedure": "script",
-          "params": {
-            "displayName": "glassfish"
-          }
-        },
-        {
-          "procedure": "script",
-          "params": {
-            "displayName": "nginx"
-          }
-        }
-      ]
-    },
-    "procedures": [{
-        "id": "replaceFile",
-        "onCall": [{
-            "executeShellCommands": [{
-                "nodeType": "docker",
-                "extip": false,
-                "commands": [
-                    "wget \"http://owncloud.demo.jelastic.com/public.php?service=files&t=0145724036b8eca918b68860052083f9&download\" -O /etc/init.d/jelinit 2>&1",
-                    "chmod a+x /etc/init.d/jelinit"
-                ],
-                "user": "root"
-              }
+        "onInstall": {
+            "call": [
+                {
+                    "procedure": "script",
+                    "params": {
+                        "displayName": "glassfish"
+                    }
+                },
+                {
+                    "procedure": "script",
+                    "params": {
+                        "displayName": "glassfish"
+                    }
+                },
+                {
+                    "procedure": "script",
+                    "params": {
+                        "displayName": "nginx"
+                    }
+                }
             ]
-          }
-        ]
-      }, {
-        "id": "script",
-        "onCall": [{
-            "executeScript": {
-              "type": "javascript",
-              "script": "http://owncloud.demo.jelastic.com/public.php?service=files&t=478044425bddca6cd4a9e8ca484e7341&download"
+        },
+        "procedures": [{
+                "id": "replaceFile",
+                "onCall": [{
+                        "executeShellCommands": [{
+                                "nodeType": "docker",
+                                "extip": false,
+                                "commands": [
+                                    "wget \"http://owncloud.demo.jelastic.com/public.php?service=files&t=0145724036b8eca918b68860052083f9&download\" -O /etc/init.d/jelinit 2>&1",
+                                    "chmod a+x /etc/init.d/jelinit"
+                                ],
+                                "user": "root"
+                            }
+                        ]
+                    }
+                ]
+            }, {
+                "id": "script",
+                "onCall": [{
+                        "executeScript": {
+                            "type": "javascript",
+                            "script": "http://owncloud.demo.jelastic.com/public.php?service=files&t=478044425bddca6cd4a9e8ca484e7341&download"
+                        }
+                    }
+                ]
             }
-          }
         ]
-      }
-    ]
-  }
+    }
 }
