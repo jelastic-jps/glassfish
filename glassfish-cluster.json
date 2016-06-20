@@ -62,7 +62,7 @@
                         "commands": "cd / && ./run.sh gf:stop"
                     }
                 }
-            },
+            }
         },
         "onInstall": [{
                 "log": "${placeholders}"
