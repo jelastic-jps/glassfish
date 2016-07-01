@@ -40,17 +40,15 @@
                 {
                     "nodeType": "docker",
                     "extip": true,
-                    "displayName": "nginx",
+                    "cloudlets": 16,
+                    "count": 1,
+                    "displayName": "LoadBalancer",
                     "nodeGroup": "bl",
-                    "cloudlets": 8,
                     "docker": {
-                        "image": "andretadeu/simple-nginx-load-balancer",
-                        "links": ["das:host0", "node1:host1", "node2:host2"],
+                        "image": "andretadeu/haproxy-managed-lb",
+                        "volumes" : ["/usr/local/etc/haproxy"],
                         "env": {
-                            "HOSTS": "host0_1:8080,host1_1:28080,host2_1:28080"
-                        },
-                        "registry": {
-                            "url": "registry.hub.docker.com"
+                            "HOSTS_PORT": "28080"
                         }
                     }
                 }]
@@ -62,29 +60,27 @@
                         "commands": "cd / && ./run.sh gf:stop"
                     }
                 }
+            },
+            "onAfterScaleOut[nodeGroup:cp]": {
+                "call": [
+                    "addClusterMembers"
+                ]
+            },
+            "onAfterScaleIn[nodeGroup:cp]": {
+                "forEach(event.response.nodes)": {
+                    "execCmd": {
+                        "nodeGroup": "bl",
+                        "commands": [
+                            "/root/lb_manager.sh --removehost ${@i.intIP}"
+                        ]
+                    }
+                }
             }
         },
         "onInstall": [{
-                "log": "${placeholders}"
-            }, {
-            "call": [{
-                "procedure": "script",
-                "params": {
-                    "displayName": "glassfish"
-                }
-            },
-            {
-                "procedure": "script",
-                "params": {
-                    "displayName": "glassfish"
-                }
-            },
-            {
-                "procedure": "script",
-                "params": {
-                    "displayName": "nginx"
-                }
-            }],
+            "call": [
+                "addClusterMembers"
+            ],
             "executeScript": {
                 "type": "js",
                 "script": "https://download.jelastic.com/public.php?service=files&t=ffbf704b963644640d8bbc5ef809604b&download",
@@ -96,13 +92,17 @@
             }
         }],
         "procedures": [{
-            "id": "script",
-            "onCall": [{
-                "executeScript": {
-                    "type": "js",
-                    "script": "http://owncloud.demo.jelastic.com/public.php?service=files&t=478044425bddca6cd4a9e8ca484e7341&download"
+            "id": "addClusterMembers",
+            "onCall": {
+                "forEach(nodes.cp)": {
+                    "execCmd": {
+                        "nodeGroup" : "bl",
+                        "commands": [
+                            "/root/lb_manager.sh --addhosts ${@i.intIP}"
+                        ]
+                    }
                 }
-            }]
+            }
         }]
     }
 }
