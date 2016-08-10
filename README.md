@@ -13,7 +13,7 @@ In the next dialog, set the name of the environment, the region, and click in
 'Install' button.
 
 Finally, you just have to wait Jelastic create the environment for you. To
-access Glassfish control panel, you need to get the URL of the DAS container,
+access GlassFish control panel, you need to get the URL of the DAS container,
 and type the following in your web browser location bar:
 
 - https://[DAS container URL]:4848
