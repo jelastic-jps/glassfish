@@ -1,4 +1,4 @@
-# jee-cluster
+# Glassfish cluster
 Jelastic JPS file to define an importable environment.
 
 ## How to use
