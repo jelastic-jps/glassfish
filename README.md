@@ -1,4 +1,4 @@
-# Glassfish cluster
+# GlassFish cluster
 Jelastic JPS file to define an importable environment.
 
 ## How to use
@@ -6,7 +6,7 @@ Firstly, clone this project in any folder you like.
 
 In Jelastic control panel, click in the down arrow button at the side of
 'New environment', and then click in 'import'. After that, in 'Local file' tab,
-click in 'Browse', select the jenkins-cluster.json file, and click in 'Import'
+click in 'Browse', select the glassfish-cluster.json file, and click in 'Import'
 button.
 
 In the next dialog, set the name of the environment, the region, and click in
