@@ -11,7 +11,7 @@
             "displayName": "DAS",
             "nodeGroup": "das",
             "docker": {
-              "image": "andretadeu/glassfish",
+              "image": "jelastic/glassfish",
               "env": {
                 "DAS": "true"
               }
@@ -22,7 +22,7 @@
             "nodeGroup": "cp",
             "count": 2,
             "docker": {
-              "image": "andretadeu/glassfish",
+              "image": "jelastic/glassfish",
               "links": [
                 "das:das"
               ]
