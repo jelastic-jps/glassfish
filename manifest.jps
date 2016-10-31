@@ -33,7 +33,7 @@
             "displayName": "LoadBalancer",
             "nodeGroup": "bl",
             "docker": {
-              "image": "andretadeu/haproxy-managed-lb",
+              "image": "jelastic/haproxy-managed-lb",
               "volumes": [
                 "/usr/local/etc/haproxy"
               ],
@@ -103,7 +103,7 @@
             "nodeGroup": "das",
             "commands": [
               "wget -O clusterjsp.ear https://github.com/jelastic-jps/glassfish-cluster/blob/master/clusterjsp.ear?raw=true",
-              "while (true); do fuser -n tcp 4848 && { asadmin --user=admin --passwordfile=/opt/glassfishpwd deploy --target cluster1 clusterjsp.ear &>> /var/log/run.log; break; } || sleep 2s; done"
+              "while (true); do fuser -n tcp 4848 && { /glassfish4/bin/asadmin --user=admin --passwordfile=/opt/glassfishpwd deploy --target cluster1 clusterjsp.ear &>> /var/log/run.log; break; } || sleep 2s; done"
             ]
           }
         }
