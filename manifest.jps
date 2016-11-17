@@ -1,136 +1,126 @@
 {
-  "jpsType": "install",
-  "jpsVersion": "0.8",
-  "application": {
-    "name": "GlassFish Cluster",
-    "env": {
-      "topology": {
-        "nodes": [
-          {
-            "cloudlets": 16,
-            "displayName": "DAS",
-            "nodeGroup": "das",
-            "docker": {
-              "image": "jelastic/glassfish",
-              "env": {
-                "DAS": "true"
-              }
-            }
-          },
-          {
-            "cloudlets": 16,
-            "nodeGroup": "cp",
-            "count": 2,
-            "docker": {
-              "image": "jelastic/glassfish",
-              "links": [
-                "das:das"
-              ]
-            }
-          },
-          {
-            "cloudlets": 16,
-            "displayName": "LoadBalancer",
-            "nodeGroup": "bl",
-            "docker": {
-              "image": "jelastic/haproxy-managed-lb",
-              "volumes": [
-                "/usr/local/etc/haproxy"
-              ],
-              "env": {
-                "HOSTS_PORT": "28080"
-              }
-            }
-          }
-        ],
-        "ssl": true
-      },
-      "onBeforeScaleIn[nodeGroup:cp]": {
-        "forEach(event.response.nodes)": [
-          {
-            "execCmd": {
-              "nodeGroup": "bl",
-              "commands": [
-                "/root/lb_manager.sh --removehost ${@i.intIP}"
-              ]
-            }
-          },
-          {
-            "execCmd": {
-              "nodeId": "${@i.id}",
-              "commands": "cd / && ./run.sh gf:stop"
-            }
-          }
-        ]
-      },
-      "onAfterScaleOut[nodeGroup:cp]": {
-        "call": [
-          "addClusterMembers"
-        ]
-      }
-    },
-    "onInstall": [
-      {
-        "call": [
-          "addClusterMembers",
-          "deployApp"
-        ]
-      },
-      {
-        "restartContainers": {
-          "nodeGroup": "cp"
-        }
-      }
-    ],
-    "procedures": [
-      {
-        "id": "addClusterMembers",
-        "onCall": {
-          "forEach(nodes.cp)": {
-            "execCmd": {
-              "nodeGroup": "bl",
-              "commands": [
-                "/root/lb_manager.sh --addhosts ${@i.intIP}"
-              ]
-            }
-          }
-        }
-      },
-      {
-        "id": "deployApp",
-        "onCall": {
-          "execCmd": {
-            "nodeGroup": "das",
-            "commands": [
-              "wget -O clusterjsp.ear https://github.com/jelastic-jps/glassfish-cluster/blob/master/test-app/clusterjsp.ear?raw=true",
-              "while (true); do fuser -n tcp 4848 && { /glassfish4/bin/asadmin --user=admin --passwordfile=/opt/glassfishpwd deploy --target cluster1 clusterjsp.ear &>> /var/log/run.log; break; } || sleep 2s; done"
-            ]
-          }
-        }
-      },
-      {
-        "id": "add-triggers",
-        "onCall": {
-          "execScript": {
-            "type": "js",
-            "script": "https://github.com/jelastic-jps/payara/raw/master/addons/autoscaling-triggers/add-triggers.js",
-            "params": {
-              "nodeGroup": "cp",
-              "resourceType": "CPU",
-              "scaleUpValue": 70,
-              "scaleUpLimit": 10,
-              "scaleUpLoadPeriod": 1,
-              "scaleDownValue": 30,
-              "scaleDownLimit": 1,
-              "scaleDownLoadPeriod": 1,
-              "cleanOldTriggers" : true
-            }
-          }
-        }
-      }
-    ],
-    "success": {
-      "email": "Admin Console: <a href='${nodes.das.first.url}:4848' target='_blank'>${nodes.das.first.url}:4848</a> <br/>Enter the credentials below to login. <br/>Username: <b>admin</b><br/>Password: <b>glassfish</b>"
-    }
-  }
+	"jpsType": "install",
+	"jpsVersion": "0.8",
+	"application": {
+		"name": "GlassFish Cluster",
+		"env": {
+			"--": "--- Define Cluster Topology ----",
+			"topology": {
+				"nodes": [{
+					"cloudlets": 16,
+					"displayName": "DAS",
+					"nodeGroup": "das",
+					"docker": {
+						"image": "jelastic/glassfish",
+						"env": {
+							"DAS": "true"
+						}
+					}
+				}, {
+					"cloudlets": 16,
+					"nodeGroup": "cp",
+					"count": 2,
+					"docker": {
+						"image": "jelastic/glassfish",
+						"links": [
+							"das:das"
+						]
+					}
+				}, {
+					"cloudlets": 16,
+					"displayName": "LoadBalancer",
+					"nodeGroup": "bl",
+					"docker": {
+						"image": "jelastic/haproxy-managed-lb",
+						"volumes": [
+							"/usr/local/etc/haproxy"
+						],
+						"env": {
+							"HOSTS_PORT": "28080"
+						}
+					}
+				}],
+				"ssl": true
+			},
+			"--": "---- Handle Events ----",
+			"onBeforeScaleIn[nodeGroup:cp]": {
+				"forEach(event.response.nodes)": [{
+					"execCmd": {
+						"nodeGroup": "bl",
+						"commands": [
+							"/root/lb_manager.sh --removehost ${@i.intIP}"
+						]
+					}
+				}, {
+					"execCmd": {
+						"nodeId": "${@i.id}",
+						"commands": "cd / && ./run.sh gf:stop"
+					}
+				}]
+			},
+			"onAfterScaleOut[nodeGroup:cp]": {
+				"call": [
+					"addClusterMembers"
+				]
+			}
+		},
+		"onInstall": [{
+			"call": [
+				"addClusterMembers",
+				"deployApp",
+				"addAutoScalingTriggers"
+			]
+		}, {
+			"restartContainers": {
+				"nodeGroup": "cp"
+			}
+		}],
+		"--": "---- Create Procedures ----",
+		"procedures": [{
+			"id": "addClusterMembers",
+			"onCall": {
+				"forEach(nodes.cp)": {
+					"execCmd": {
+						"nodeGroup": "bl",
+						"commands": [
+							"/root/lb_manager.sh --addhosts ${@i.intIP}"
+						]
+					}
+				}
+			}
+		}, {
+			"id": "deployApp",
+			"onCall": {
+				"execCmd": {
+					"nodeGroup": "das",
+					"commands": [
+						"wget -O clusterjsp.ear https://github.com/jelastic-jps/glassfish-cluster/blob/master/test-app/clusterjsp.ear?raw=1",
+						"while (true); do fuser -n tcp 4848 && { /glassfish4/bin/asadmin --user=admin --passwordfile=/opt/glassfishpwd deploy --target cluster1 clusterjsp.ear &>> /var/log/run.log; break; } || sleep 2s; done"
+					]
+				}
+			}
+		}, {
+			"id": "addAutoScalingTriggers",
+			"onCall": {
+				"execScript": {
+					"type": "js",
+					"script": "https://github.com/jelastic-jps/glassfish-cluster/blob/master/scripts/add-triggers.js?raw=1",
+					"params": {
+						"nodeGroup": "cp",
+						"resourceType": "CPU",
+						"scaleUpValue": 70,
+						"scaleUpLimit": 10,
+						"scaleUpLoadPeriod": 1,
+						"scaleDownValue": 30,
+						"scaleDownLimit": 1,
+						"scaleDownLoadPeriod": 1,
+						"cleanOldTriggers": true
+					}
+				}
+			}
+		}],
+		"success": {
+			"email": "Admin Console: <a href='${nodes.das.first.url}:4848' target='_blank'>${nodes.das.first.url}:4848</a> <br/>Enter the credentials below to login. <br/>Username: <b>admin</b><br/>Password: <b>glassfish</b>"
+		}
+	}
 }
