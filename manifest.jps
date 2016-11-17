@@ -102,7 +102,7 @@
           "execCmd": {
             "nodeGroup": "das",
             "commands": [
-              "wget -O clusterjsp.ear https://github.com/jelastic-jps/glassfish-cluster/blob/master/clusterjsp.ear?raw=true",
+              "wget -O clusterjsp.ear https://github.com/jelastic-jps/glassfish-cluster/blob/master/test-app/clusterjsp.ear?raw=true",
               "while (true); do fuser -n tcp 4848 && { /glassfish4/bin/asadmin --user=admin --passwordfile=/opt/glassfishpwd deploy --target cluster1 clusterjsp.ear &>> /var/log/run.log; break; } || sleep 2s; done"
             ]
           }
