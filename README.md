@@ -8,7 +8,7 @@ Auto-scalable Jelastic GlassFish Cluster in Containers
 
 
 Due to the native GlassFish clustering architecture, its topology includes three node groups:
-- _Load Balancer_ - intended to process all incoming requests, sent to the cluster, and distribute them between _worker nodes_
+- _Load Balancer_ - intended to process all incoming requests, sent to the cluster, and distribute them between worker nodes
 - _Worker Node_ - application server to handle the required app and web services
 - _Domain Administration Server (DAS)_ - management instance which performs centralized control of the cluster nodes and configure communication between them via SSH 
 
@@ -29,8 +29,8 @@ Upon deploying this solution, you’ll get the already configured and ready-to-w
 
 
 GlassFish cluster package by Jelastic automatically adjusts number of _Worker nodes_ based on current cluster load (up to 10 instances per layer) according to the following conditions:
-- node is added whenever loading is >70% for at least 1 minute
-- node is removed whenever loading is <30% for at least 1 minute
+- +1 node if CPU usage is >70% for at least 1 minute
+- -1 node if CPU usage <30% for at least 1 minute
 
 
 The appropriate modifications are automatically applied to _DAS_ and _Load Balancer_ configs.
