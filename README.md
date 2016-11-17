@@ -25,7 +25,7 @@ Current implementation of Jelastic scalable GlassFish cluster is built on top of
 Upon deploying this solution, you’ll get the already configured and ready-to-work GlassFish cluster inside the Cloud, that consists of DAS node, 2 GF application servers, HAProxy load balancer and is secured by [Jelastic SSL] (https://docs.jelastic.com/jelastic-ssl). For the detailed guidance on this JPS package installation and management, refer to the [GlassFish Cluster with Automatic Load Balancing] (http://blog.jelastic.com/2016/08/16/how-to-configure-glassfish-cluster-with-automatic-load-balancing/) page.
 
 
-## Auto-Scaling Configuration for Glassfish Cluster
+## Auto-Scaling Configuration 
 
 
 GlassFish cluster package by Jelastic automatically adjusts number of _Worker nodes_ based on current cluster load (up to 10 instances per layer) according to the following conditions:
@@ -39,7 +39,7 @@ The appropriate modifications are automatically applied to _DAS_ and _Load Balan
 In case you’d like to change the conditions of automatic nodes’ scaling manually, refer to the appropriate triggers’ parameters within the [Automatic Horizontal Scaling] (https://docs.jelastic.com/automatic-horizontal-scaling) settings section.
 
 
-## How to Host GlassFish Cluster inside the Cloud
+## Cloud Hosting Deployment
 
 
 ### Public Cloud
