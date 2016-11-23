@@ -23,7 +23,7 @@
 				}, {
 					"cloudlets": 16,
 					"nodeGroup": "cp",
-					"count": 1,
+					"count": 2,
 					"docker": {
 						"image": "jelastic/glassfish:latest",
 						"links": [
