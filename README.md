@@ -13,7 +13,7 @@ Due to the native GlassFish clustering architecture, its topology includes three
 - _Domain Administration Server (DAS)_ - management instance which performs centralized control of the cluster nodes and configure communication between them via SSH 
 
 
-![GlassFish cluster scheme] (/img/gf-cluster.png)
+![GlassFish cluster scheme] (/glassfish-cluster/img/gf-cluster.png)
 
 
 
