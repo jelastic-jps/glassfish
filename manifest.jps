@@ -2,6 +2,7 @@
 	"jpsType": "install",
 	"jpsVersion": "0.8",
 	"application": {
+		"id": "glassfish-cluster",
 		"name": "GlassFish Cluster",
 		"env": {
 			"--": "--- Define Cluster Topology ----",
@@ -11,20 +12,32 @@
 					"displayName": "DAS",
 					"nodeGroup": "das",
 					"docker": {
-						"image": "jelastic/glassfish",
+						"image": "jelastic/glassfish:latest",
 						"env": {
 							"DAS": "true"
-						}
+						},
+						"volumes": [
+							"/home/glassfish/.ssh"
+						]
 					}
 				}, {
 					"cloudlets": 16,
 					"nodeGroup": "cp",
-					"count": 2,
+					"count": 1,
 					"docker": {
-						"image": "jelastic/glassfish",
+						"image": "jelastic/glassfish:latest",
 						"links": [
 							"das:das"
-						]
+						],
+						"volumes": [
+							"/home/glassfish/.ssh"
+						],
+						"volumeMounts": {
+							"/home/glassfish/.ssh": {
+								"sourceNodeGroup": "das",
+								"readOnly": false
+							}
+						}
 					}
 				}, {
 					"cloudlets": 16,
@@ -54,30 +67,37 @@
 				}, {
 					"execCmd": {
 						"nodeId": "${@i.id}",
-						"commands": "cd / && ./run.sh gf:stop"
+						"commands": "sudo -i -u ${USER} bash -c 'bash glassfish.sh stop'"
 					}
 				}]
 			},
 			"onAfterScaleOut[nodeGroup:cp]": {
 				"call": [
-					"addClusterMembers"
+					"addWorkerToLB"
 				]
 			}
 		},
 		"onInstall": [{
 			"call": [
-				"addClusterMembers",
 				"deployApp",
+				"addWorkerToLB",
 				"addAutoScalingTriggers"
 			]
-		}, {
-			"restartContainers": {
-				"nodeGroup": "cp"
-			}
 		}],
 		"--": "---- Create Procedures ----",
 		"procedures": [{
-			"id": "addClusterMembers",
+			"id": "deployApp",
+			"onCall": {
+				"execCmd": {
+					"nodeGroup": "das",
+					"commands": [
+						"sudo -u ${USER} wget -O ${HOME_DIR}/clusterjsp.ear https://github.com/jelastic-jps/glassfish/blob/master/glassfish-cluster/test-app/clusterjsp.ear?raw=1",
+						"while (true); do fuser -n tcp 4848 && { sudo -u ${USER} ${HOME_DIR}/glassfish4/bin/asadmin --user=admin --passwordfile=${PSWD_FILE} deploy --target cluster1 ${HOME_DIR}/clusterjsp.ear; break; } || sleep 2s; done"
+					]
+				}
+			}
+		}, {
+			"id": "addWorkerToLB",
 			"onCall": {
 				"forEach(nodes.cp)": {
 					"execCmd": {
@@ -89,22 +109,11 @@
 				}
 			}
 		}, {
-			"id": "deployApp",
-			"onCall": {
-				"execCmd": {
-					"nodeGroup": "das",
-					"commands": [
-						"wget -O clusterjsp.ear https://github.com/jelastic-jps/glassfish-cluster/blob/master/test-app/clusterjsp.ear?raw=1",
-						"while (true); do fuser -n tcp 4848 && { /glassfish4/bin/asadmin --user=admin --passwordfile=/opt/glassfishpwd deploy --target cluster1 clusterjsp.ear &>> /var/log/run.log; break; } || sleep 2s; done"
-					]
-				}
-			}
-		}, {
 			"id": "addAutoScalingTriggers",
 			"onCall": {
 				"execScript": {
 					"type": "js",
-					"script": "https://github.com/jelastic-jps/glassfish-cluster/blob/master/scripts/add-triggers.js?raw=1",
+					"script": "https://github.com/jelastic-jps/glassfish/blob/master/glassfish-cluster/scripts/add-triggers.js?raw=1",
 					"params": {
 						"nodeGroup": "cp",
 						"resourceType": "CPU",
@@ -120,7 +129,8 @@
 			}
 		}],
 		"success": {
-			"email": "Admin Console: <a href='${nodes.das.first.url}:4848' target='_blank'>${nodes.das.first.url}:4848</a> <br/>Enter the credentials below to login. <br/>Username: <b>admin</b><br/>Password: <b>glassfish</b>"
+			"text": "Admin Console: <a href='${nodes.das.first.url}:4848' target='_blank'>${nodes.das.first.url}:4848</a> <br/>Login: <b>admin</b><br/>Password: <b>glassfish</b>",
+			"email": "Admin Console: <a href='${nodes.das.first.url}:4848' target='_blank'>${nodes.das.first.url}:4848</a> <br/>Login: <b>admin</b><br/>Password: <b>glassfish</b>"
 		}
 	}
 }
