@@ -23,6 +23,7 @@
 				}, {
 					"cloudlets": 16,
 					"nodeGroup": "cp",
+					"displayName": "Worker",
 					"count": 1,
 					"docker": {
 						"image": "jelastic/glassfish:latest",
@@ -73,15 +74,17 @@
 			},
 			"onAfterScaleOut[nodeGroup:cp]": {
 				"call": [
-					"addWorkerToLB"
+					"addWorkerToLB",
+                    "80->28080"
 				]
 			}
 		},
 		"onInstall": [{
 			"call": [
-				"deployApp",
 				"addWorkerToLB",
-				"addAutoScalingTriggers"
+                "80->28080",
+				"addAutoScalingTriggers",
+				"deployApp"
 			]
 		}],
 		"--": "---- Create Procedures ----",
@@ -92,7 +95,7 @@
 					"nodeGroup": "das",
 					"commands": [
 						"sudo -u ${USER} wget -O ${HOME_DIR}/clusterjsp.ear https://github.com/jelastic-jps/glassfish/blob/master/glassfish-cluster/test-app/clusterjsp.ear?raw=1",
-						"while (true); do fuser -n tcp 4848 && { sudo -u ${USER} ${HOME_DIR}/glassfish4/bin/asadmin --user=admin --passwordfile=${PSWD_FILE} deploy --target cluster1 ${HOME_DIR}/clusterjsp.ear; break; } || sleep 2s; done"
+						"while (true); do fuser -n tcp 4848 && { sleep 20; sudo -u ${USER} ${HOME_DIR}/glassfish4/bin/asadmin --user=admin --passwordfile=${PSWD_FILE} deploy --target cluster1 ${HOME_DIR}/clusterjsp.ear; break; } || sleep 2s; done"
 					]
 				}
 			}
@@ -127,10 +130,20 @@
 					}
 				}
 			}
+		}, {
+			"id": "80->28080",
+			"onCall": {
+				"execCmd": {
+					"nodeGroup": "cp",
+					"commands": [
+						"iptables -t nat -I PREROUTING -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 28080 && iptables-save"
+					]
+				}
+			}
 		}],
 		"success": {
-			"text": "Admin Console: <a href='${nodes.das.first.url}:4848' target='_blank'>${nodes.das.first.url}:4848</a> <br/>Login: <b>admin</b><br/>Password: <b>glassfish</b>",
-			"email": "Admin Console: <a href='${nodes.das.first.url}:4848' target='_blank'>${nodes.das.first.url}:4848</a> <br/>Login: <b>admin</b><br/>Password: <b>glassfish</b>"
+			"text": "<table style='font-size:14px'><tr><td>Admin Console:</td><td><a href='${nodes.das.first.url}:4848' target='_blank'>${nodes.das.first.adminUrl}:4848</a></td></tr><tr><td>Login:</td><td><b>admin</b></td></tr><tr><td>Password:</td><td><b>glassfish</b></td></tr></table>",
+			"email": "<table><tr><td>Admin Console:</td><td><a href='${nodes.das.first.url}:4848' target='_blank'>${nodes.das.first.adminUrl}:4848</a></td></tr><tr><td>Login:</td><td><b>admin</b></td></tr><tr><td>Password:</td><td><b>glassfish</b></td></tr></table>"
 		}
 	}
 }
