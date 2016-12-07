@@ -72,17 +72,55 @@
 					}
 				}]
 			},
-			"onAfterScaleOut[nodeGroup:cp]": {
+			"onAfterScaleOut[nodeGroup:cp]": [{
 				"call": [
-					"addWorkerToLB",
-                    "80->28080"
+					"addWorkerToLB"
 				]
+			}, {
+				"forEach(event.response.nodes)": {
+					"call": [{
+						"procedure": "80->28080",
+						"params": {
+							"nodeId": "${@i.id}"
+						}
+					}, {
+						"procedure": "localhost:4848->das:4848",
+						"params": {
+							"nodeId": "${@i.id}"
+						}
+					}]
+				}
+			}],
+			"onAfterSetCloudletCount[nodeGroup:cp]": {
+				"restartContainers": {
+					"nodeGroup": "${event.params.nodeGroup}"
+				}
+			},
+			"onAfterSetCloudletCount[nodeGroup:das]": {
+				"restartContainers": {
+					"nodeGroup": "${event.params.nodeGroup}"
+				}
 			}
 		},
 		"onInstall": [{
 			"call": [
 				"addWorkerToLB",
-                "80->28080",
+				"80->28080", {
+					"procedure": "80->28080",
+					"params": {
+						"nodeId": "xxx"
+					}
+				}, {
+					"procedure": "localhost:4848->das:4848",
+					"params": {
+						"nodeGroup": "cp"
+					}
+				}, {
+					"procedure": "localhost:4848->das:4848",
+					"params": {
+						"nodeGroup": "das"
+					}
+				},
 				"addAutoScalingTriggers",
 				"deployApp"
 			]
@@ -135,15 +173,27 @@
 			"onCall": {
 				"execCmd": {
 					"nodeGroup": "cp",
+					"nodeId": "${this.nodeId}",
 					"commands": [
 						"iptables -t nat -I PREROUTING -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 28080 && iptables-save"
 					]
 				}
 			}
+		}, {
+			"id": "localhost:4848->das:4848",
+			"onCall": [{
+				"execCmd": {
+					"nodeGroup": "${this.nodeGroup}",
+					"nodeId": "${this.nodeId}",
+					"commands": [
+						"sed -i \"s/http:\\/\\/localhost:4848/https:\\/\\/${nodes.das.first.nodeType}${nodes.das.first.id}-${env.domain}:4848/g\" ${HOME_DIR}/glassfish4/glassfish/domains/domain1/docroot/index.html"
+					]
+				}
+			}]
 		}],
 		"success": {
-			"text": "<table style='font-size:14px'><tr><td>Admin Console:</td><td><a href='${nodes.das.first.url}:4848' target='_blank'>${nodes.das.first.adminUrl}:4848</a></td></tr><tr><td>Login:</td><td><b>admin</b></td></tr><tr><td>Password:</td><td><b>glassfish</b></td></tr></table>",
-			"email": "<table><tr><td>Admin Console:</td><td><a href='${nodes.das.first.url}:4848' target='_blank'>${nodes.das.first.adminUrl}:4848</a></td></tr><tr><td>Login:</td><td><b>admin</b></td></tr><tr><td>Password:</td><td><b>glassfish</b></td></tr></table>"
+			"text": "<table style='font-size:14px'><tr><td>Admin Console:</td><td><a href='${nodes.das.first.adminUrl}:4848' target='_blank'>${nodes.das.first.adminUrl}:4848</a></td></tr><tr><td>Login:</td><td><b>admin</b></td></tr><tr><td>Password:</td><td><b>glassfish</b></td></tr></table>",
+			"email": "<table><tr><td>Admin Console:</td><td><a href='${nodes.das.first.adminUrl}:4848' target='_blank'>${nodes.das.first.adminUrl}:4848</a></td></tr><tr><td>Login:</td><td><b>admin</b></td></tr><tr><td>Password:</td><td><b>glassfish</b></td></tr></table>"
 		}
 	}
 }
