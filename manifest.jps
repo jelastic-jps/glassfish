@@ -3,7 +3,9 @@
 	"jpsVersion": "0.8",
 	"application": {
 		"id": "glassfish-cluster",
-		"name": "GlassFish Cluster",
+		"name": "Auto Scaling GlassFish Cluster",
+		"logo": "https://github.com/jelastic-jps/glassfish/raw/master/glassfish-cluster/img/glassfish-logo.png",
+		"description": "Upon deploying this solution, you’ll get the preconfigured and ready-to-work GlassFish Cluster, that consists of 1 DAS node, 1 Worker node and 1 HAProxy load balancer. By default connection to the cluster is secured by Jelastic SSL.",
 		"env": {
 			"--": "--- Define Cluster Topology ----",
 			"topology": {
@@ -58,24 +60,21 @@
 			},
 			"--": "---- Handle Events ----",
 			"onBeforeScaleIn[nodeGroup:cp]": {
-				"forEach(event.response.nodes)": [{
+				"forEach(event.response.nodes)": {
 					"execCmd": {
 						"nodeGroup": "bl",
-						"commands": [
-							"/root/lb_manager.sh --removehost ${@i.intIP}"
-						]
+						"commands": "/root/lb_manager.sh --removehost ${@i.intIP}"
 					}
-				}, {
+				},
+				"forEach(event.response.nodes)": {
 					"execCmd": {
 						"nodeId": "${@i.id}",
 						"commands": "sudo -i -u ${USER} bash -c 'bash glassfish.sh stop'"
 					}
-				}]
+				}
 			},
 			"onAfterScaleOut[nodeGroup:cp]": [{
-				"call": [
-					"addWorkerToLB"
-				]
+				"call": "addWorkerToLB"
 			}, {
 				"forEach(event.response.nodes)": {
 					"call": [{
@@ -143,9 +142,7 @@
 				"forEach(nodes.cp)": {
 					"execCmd": {
 						"nodeGroup": "bl",
-						"commands": [
-							"/root/lb_manager.sh --addhosts ${@i.intIP}"
-						]
+						"commands": "/root/lb_manager.sh --addhosts ${@i.intIP}"
 					}
 				}
 			}
@@ -174,9 +171,7 @@
 				"execCmd": {
 					"nodeGroup": "cp",
 					"nodeId": "${this.nodeId}",
-					"commands": [
-						"iptables -t nat -I PREROUTING -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 28080 && iptables-save"
-					]
+					"commands": "iptables -t nat -I PREROUTING -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 28080 && iptables-save"
 				}
 			}
 		}, {
@@ -185,9 +180,7 @@
 				"execCmd": {
 					"nodeGroup": "${this.nodeGroup}",
 					"nodeId": "${this.nodeId}",
-					"commands": [
-						"sed -i \"s/http:\\/\\/localhost:4848/https:\\/\\/${nodes.das.first.nodeType}${nodes.das.first.id}-${env.domain}:4848/g\" ${HOME_DIR}/glassfish4/glassfish/domains/domain1/docroot/index.html"
-					]
+					"commands": "sed -i \"s/http:\\/\\/localhost:4848/https:\\/\\/${nodes.das.first.nodeType}${nodes.das.first.id}-${env.domain}:4848/g\" ${HOME_DIR}/glassfish4/glassfish/domains/domain1/docroot/index.html"
 				}
 			}]
 		}],
