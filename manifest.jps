@@ -5,7 +5,7 @@
 		"id": "glassfish-cluster",
 		"name": "Auto Scaling GlassFish Cluster",
 		"logo": "https://github.com/jelastic-jps/glassfish/raw/master/glassfish-cluster/img/glassfish-logo.png",
-		"description": "Upon deploying this solution, you’ll get the preconfigured and ready-to-work GlassFish Cluster, that consists of 1 DAS node, 1 Worker node and 1 HAProxy load balancer. By default connection to the cluster is secured by Jelastic SSL.",
+		"description": "Pre-configured and ready-to-work GlassFish Cluster with auto scaling triggers. The cluster consists of 1 DAS node, 1 Worker node and 1 HAProxy node as the load balancer. By default connection to the cluster is secured by Jelastic SSL.",
 		"env": {
 			"--": "--- Define Cluster Topology ----",
 			"topology": {
@@ -105,11 +105,6 @@
 			"call": [
 				"addWorkerToLB",
 				"80->28080", {
-					"procedure": "80->28080",
-					"params": {
-						"nodeId": "xxx"
-					}
-				}, {
 					"procedure": "localhost:4848->das:4848",
 					"params": {
 						"nodeGroup": "cp"
@@ -171,7 +166,7 @@
 				"execCmd": {
 					"nodeGroup": "cp",
 					"nodeId": "${this.nodeId}",
-					"commands": "iptables -t nat -I PREROUTING -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 28080 && iptables-save"
+					"commands": "iptables -t nat -I PREROUTING -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 28080 && iptables-save > /etc/iptables.rules"
 				}
 			}
 		}, {
