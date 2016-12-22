@@ -155,7 +155,7 @@
 						"scaleUpLoadPeriod": 1,
 						"scaleDownValue": 30,
 						"scaleDownLimit": 1,
-						"scaleDownLoadPeriod": 1,
+						"scaleDownLoadPeriod": 5,
 						"cleanOldTriggers": true
 					}
 				}
