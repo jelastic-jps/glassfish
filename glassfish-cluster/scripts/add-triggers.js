@@ -4,12 +4,10 @@
 var nMaxSameNodes,
     oResp;
 
-oResp = jelastic.billing.account.GetQuotas('environment.maxsamenodescount').array;
+oResp = jelastic.billing.account.GetQuotas('environment.maxsamenodescount').array[0];
 
-if (oResp && oResp.result == 0) {
-    if (oResp.array.length != 0) {
-        nMaxSameNodes = oResp.array[0].value;
-    }
+if (oResp && oResp.value) {
+    nMaxSameNodes = oResp.value;
 }
 
 if (nMaxSameNodes < scaleUpLimit) {
