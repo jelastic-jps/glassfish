@@ -1,6 +1,21 @@
 //@auth
 //@req(nodeGroup, resourceType, cleanOldTriggers, scaleUpValue, scaleUpLimit, scaleUpLoadPeriod, scaleDownValue, scaleDownLimit, scaleDownLoadPeriod)
 
+var nMaxSameNodes,
+    oResp;
+
+oResp = jelastic.billing.account.GetQuotas('environment.maxsamenodescount').array;
+
+if (oResp && oResp.result == 0) {
+    if (oResp.array.length != 0) {
+        nMaxSameNodes = oResp.array[0].value;
+    }
+}
+
+if (nMaxSameNodes < scaleUpValue) {
+    scaleUpValue = nMaxSameNodes;
+}
+
 if (cleanOldTriggers) {
     var actions = ['ADD_NODE', 'REMOVE_NODE'];
     for (var i = 0; i < actions.length; i++){
