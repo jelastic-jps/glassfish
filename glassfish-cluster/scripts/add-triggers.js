@@ -12,8 +12,8 @@ if (oResp && oResp.result == 0) {
     }
 }
 
-if (nMaxSameNodes < scaleUpValue) {
-    scaleUpValue = nMaxSameNodes;
+if (nMaxSameNodes < scaleUpLimit) {
+    scaleUpLimit = nMaxSameNodes;
 }
 
 if (cleanOldTriggers) {
