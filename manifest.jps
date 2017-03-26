@@ -131,7 +131,7 @@
 					"nodeGroup": "das",
 					"commands": [
 						"sudo -u ${USER} wget -O ${HOME_DIR}/clusterjsp.ear https://github.com/jelastic-jps/glassfish/blob/master/glassfish-cluster/test-app/clusterjsp.ear?raw=1",
-						"while (true); do fuser -n tcp 4848 && { sleep 20; sudo -u ${USER} ${HOME_DIR}/glassfish4/bin/asadmin --user=admin --passwordfile=${PSWD_FILE} deploy --target cluster1 ${HOME_DIR}/clusterjsp.ear; break; } || sleep 2s; done"
+						"while (true); do fuser -n tcp 4848 && { sudo -u ${USER} ${HOME_DIR}/glassfish4/bin/asadmin --user=admin --passwordfile=${PSWD_FILE} deploy --target cluster1 ${HOME_DIR}/clusterjsp.ear; break; } || sleep 2s; done"
 					]
 				}
 			}
