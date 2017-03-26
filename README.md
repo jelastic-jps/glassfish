@@ -20,7 +20,7 @@ Current implementation of Jelastic scalable GlassFish cluster is built on top of
 - [GlassFish](https://github.com/jelastic-docker/glassfish) _Worker_ and _DAS_ nodes template
 
 
-Upon deploying this solution, you’ll get the already configured and ready-to-work GlassFish cluster inside the Cloud, that consists of DAS node, 2 GF application servers, HAProxy load balancer and is secured by [Jelastic SSL](https://docs.jelastic.com/jelastic-ssl). For the detailed guidance on this JPS package installation and management, refer to the [GlassFish Cluster with Automatic Load Balancing](http://blog.jelastic.com/2016/08/16/how-to-configure-glassfish-cluster-with-automatic-load-balancing/) page.
+Upon deploying this solution, you’ll get the already configured and ready-to-work GlassFish cluster inside the Cloud, that consists of DAS node, 2 GF application servers (workers), HAProxy load balancer and is secured by [Jelastic SSL](https://docs.jelastic.com/jelastic-ssl). For the detailed guidance on this JPS package installation and management, refer to the [GlassFish Cluster with Automatic Load Balancing](http://blog.jelastic.com/2016/08/16/how-to-configure-glassfish-cluster-with-automatic-load-balancing/) page.
 
 
 ## Auto-Scaling Configuration 
