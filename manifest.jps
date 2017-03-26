@@ -102,10 +102,11 @@
 			}
 		},
 		"onInstall": [{
+			"restartContainers": {
+				"nodeGroup": "cp"
+			}
+		}, {
 			"call": [
-				"restartContainers": {
-					"nodeGroup": "cp"
-				},
 				"addWorkerToLB",
 				"80->28080", {
 					"procedure": "localhost:4848->das:4848",
