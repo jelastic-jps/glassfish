@@ -26,7 +26,7 @@
 					"cloudlets": 16,
 					"nodeGroup": "cp",
 					"displayName": "Worker",
-					"count": 1,
+					"count": 2,
 					"docker": {
 						"image": "jelastic/glassfish:latest",
 						"links": [
@@ -154,7 +154,7 @@
 						"scaleUpLimit": 10,
 						"scaleUpLoadPeriod": 1,
 						"scaleDownValue": 40,
-						"scaleDownLimit": 1,
+						"scaleDownLimit": 2,
 						"scaleDownLoadPeriod": 10,
 						"cleanOldTriggers": true
 					}
