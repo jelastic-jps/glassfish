@@ -8,9 +8,9 @@ Auto-scalable Jelastic GlassFish Cluster in Containers
 
 
 Due to the native GlassFish clustering architecture, its topology includes three node groups:
-- _Load Balancer_ - intended to process all incoming requests, sent to the cluster, and distribute them between worker nodes
-- _Worker Node_ - application server to handle the required app and web services
-- _Domain Administration Server (DAS)_ - management instance which performs centralized control of the cluster nodes and configure communication between them via SSH 
+- **_Load Balancer_** - intended to process all incoming requests, sent to the cluster, and distribute them between worker nodes
+- **_Worker Node_** - application server to handle the required app and web services
+- **_Domain Administration Server (DAS)_** - management instance which performs centralized control of the cluster nodes and configure communication between them via SSH 
 
 ![GlassFish cluster scheme](/glassfish-cluster/img/gf-cluster.png)
 
@@ -20,7 +20,7 @@ Current implementation of Jelastic scalable GlassFish cluster is built on top of
 - [GlassFish](https://github.com/jelastic-docker/glassfish) _Worker_ and _DAS_ nodes template
 
 
-Upon deploying this solution, you’ll get the already configured and ready-to-work GlassFish cluster inside the Cloud, that consists of DAS node, 2 GF application servers, HAProxy load balancer and is secured by [Jelastic SSL](https://docs.jelastic.com/jelastic-ssl). For the detailed guidance on this JPS package installation and management, refer to the [GlassFish Cluster with Automatic Load Balancing] (http://blog.jelastic.com/2016/08/16/how-to-configure-glassfish-cluster-with-automatic-load-balancing/) page.
+Upon deploying this solution, you’ll get the already configured and ready-to-work GlassFish cluster inside the Cloud, that consists of DAS node, 2 GF application servers, HAProxy load balancer and is secured by [Jelastic SSL](https://docs.jelastic.com/jelastic-ssl). For the detailed guidance on this JPS package installation and management, refer to the [GlassFish Cluster with Automatic Load Balancing](http://blog.jelastic.com/2016/08/16/how-to-configure-glassfish-cluster-with-automatic-load-balancing/) page.
 
 
 ## Auto-Scaling Configuration 
