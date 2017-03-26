@@ -29,8 +29,8 @@ Upon deploying this solution, you’ll get the already configured and ready-to-w
 
 
 GlassFish cluster package by Jelastic automatically adjusts number of _Worker nodes_ based on current cluster load (up to 10 instances per layer) according to the following conditions:
-- +1 node if CPU usage is >70% for at least 1 minute
-- -1 node if CPU usage <30% for at least 1 minute
+- +1 node if RAM usage > 70% for at least 1 minute
+- -1 node if RAM usage < 40% for at least 10 minute
 
 
 The appropriate modifications are automatically applied to _DAS_ and _Load Balancer_ configs.
