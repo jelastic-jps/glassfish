@@ -149,13 +149,13 @@
 					"script": "https://github.com/jelastic-jps/glassfish/blob/master/glassfish-cluster/scripts/add-triggers.js?raw=1",
 					"params": {
 						"nodeGroup": "cp",
-						"resourceType": "CPU",
+						"resourceType": "MEM",
 						"scaleUpValue": 70,
 						"scaleUpLimit": 10,
 						"scaleUpLoadPeriod": 1,
-						"scaleDownValue": 30,
+						"scaleDownValue": 40,
 						"scaleDownLimit": 1,
-						"scaleDownLoadPeriod": 5,
+						"scaleDownLoadPeriod": 10,
 						"cleanOldTriggers": true
 					}
 				}
