@@ -1,5 +1,7 @@
 #!/bin/bash
 
+PSWD_FILE=/opt/pwdfile
+
 start() {
     
     #DAS
