@@ -1,7 +1,5 @@
 #!/bin/bash
 
-PSWD_FILE=/opt/pwdfile
-
 start() {
     
     #DAS
@@ -11,13 +9,13 @@ start() {
     	cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys
 
         #start domain
-        ~/bin/asadmin start-domain
+        ${PAYARA_PATH}/bin/asadmin start-domain
 
         #update JMX default host
-        ~/bin/asadmin set --user=admin --passwordfile=${PSWD_FILE} server-config.jms-service.jms-host.default_JMS_host.host="${HOSTNAME}"
+        ${PAYARA_PATH}/bin/asadmin set --user=admin --passwordfile=${PSWD_FILE} server-config.jms-service.jms-host.default_JMS_host.host="${HOSTNAME}"
         
         #create cluster 
-        ~/bin/asadmin --user=admin --passwordfile=${PSWD_FILE} --interactive=false create-cluster cluster1
+       ${PAYARA_PATH}/bin/asadmin --user=admin --passwordfile=${PSWD_FILE} --interactive=false create-cluster cluster1
         
     fi
     
@@ -38,30 +36,30 @@ start() {
         # Busy waiting for Domain Administration Server to be available
         while [[ true ]]
         do
-            DAS_STATUS=$(ssh ${USER}@das ~/bin/asadmin --user=admin \
+            DAS_STATUS=$(ssh ${USER}@das ${PAYARA_PATH}/glassfish/bin/asadmin --user=admin \
             --passwordfile=${PSWD_FILE} list-domains | head -n 1)
             echo $DAS_STATUS >> /var/log/run.log
             [ "${DAS_STATUS}" = "domain1 not running" ] && { sleep 10; } || { break; }
         done
                 
         #start domain
-        ~/bin/asadmin start-domain
+        ${PAYARA_PATH}/bin/asadmin start-domain
         
         # Create cluster node
-        ~/bin/asadmin --user=admin --passwordfile=${PSWD_FILE} --interactive=false \
+        ${PAYARA_PATH}/bin/asadmin --user=admin --passwordfile=${PSWD_FILE} --interactive=false \
         --host das --port 4848 create-local-instance --cluster cluster1 cluster1-"${HOSTNAME}"
 
         # Stop domain
-        ~/bin/asadmin --user=admin stop-domain        
+        ${PAYARA_PATH}/bin/asadmin --user=admin stop-domain        
 
         # Update existing CONFIG node to a SSH one
-        ssh ${USER}@das ~/bin/asadmin --user=admin \
+        ssh ${USER}@das ${PAYARA_PATH}/glassfish/bin/asadmin --user=admin \
         --passwordfile=${PSWD_FILE} --interactive=false update-node-ssh \
         --sshuser "${USER}" --sshkeyfile ~/.ssh/id_rsa \
-        --nodehost "${HOSTNAME}" --installdir "${PAYARA_PATH}" "${HOSTNAME}"
+        --nodehost "${HOSTNAME}" --installdir "${HOME_DIR}"/glassfish4 "${HOSTNAME}"
 
         # Start instance
-        ssh ${USER}@das ~/lib/nadmin --user=admin \
+        ssh ${USER}@das ${PAYARA_PATH}/glassfish/lib/nadmin --user=admin \
         --passwordfile=${PSWD_FILE} --interactive=false start-instance cluster1-"${HOSTNAME}"
 
     fi
@@ -69,15 +67,15 @@ start() {
 
 stop() {
     
-    ssh ${USER}@das ~/lib/nadmin --user=admin \
+    ssh ${USER}@das ${PAYARA_PATH}/glassfish/lib/nadmin --user=admin \
     --passwordfile=${PSWD_FILE} --interactive=false stop-instance cluster1-"${HOSTNAME}"
 
     sleep 10
     
-    ssh ${USER}@das ~/glassfish4/glassfish/lib/nadmin --user=admin \
+    ssh ${USER}@das ${PAYARA_PATH}/glassfish/lib/nadmin --user=admin \
     --passwordfile=${PSWD_FILE} --interactive=false delete-instance cluster1-"${HOSTNAME}"
 
-    ssh ${USER}@das ~/glassfish4/glassfish/bin/asadmin --user=admin \
+    ssh ${USER}@das ${PAYARA_PATH}/glassfish/bin/asadmin --user=admin \
     --passwordfile=${PSWD_FILE} --interactive=false delete-node-ssh "${HOSTNAME}"
 
     #~/glassfish4/glassfish/lib/nadmin --user=admin --passwordfile=${PSWD_FILE} \
