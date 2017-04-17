@@ -56,7 +56,7 @@ start() {
         ssh ${USER}@das ${PAYARA_PATH}/glassfish/bin/asadmin --user=admin \
         --passwordfile=${PSWD_FILE} --interactive=false update-node-ssh \
         --sshuser "${USER}" --sshkeyfile ~/.ssh/id_rsa \
-        --nodehost "${HOSTNAME}" --installdir "${PAYARA_PATH} "${HOSTNAME}"
+        --nodehost "${HOSTNAME}" --installdir "${PAYARA_PATH}" "${HOSTNAME}"
 
         # Start instance
         ssh ${USER}@das ${PAYARA_PATH}/glassfish/lib/nadmin --user=admin \
