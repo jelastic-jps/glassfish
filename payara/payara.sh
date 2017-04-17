@@ -17,7 +17,7 @@ start() {
         ${PAYARA_PATH}/bin/asadmin set --user=admin --passwordfile=${PSWD_FILE} server-config.jms-service.jms-host.default_JMS_host.host="${HOSTNAME}"
         
         #create cluster 
-       ${PAYARA_PATH}/bin/asadmin --user=admin --passwordfile=${PSWD_FILE} --interactive=false create-cluster cluster1
+        ${PAYARA_PATH}/bin/asadmin --user=admin --passwordfile=${PSWD_FILE} --interactive=false create-cluster cluster1
         
     fi
     
