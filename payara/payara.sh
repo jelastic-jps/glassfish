@@ -1,7 +1,5 @@
 #!/bin/bash
 
-PSWD_FILE=/opt/pwdfile
-
 start() {
     
     #DAS
@@ -58,7 +56,7 @@ start() {
         ssh ${USER}@das ${PAYARA_PATH}/glassfish/bin/asadmin --user=admin \
         --passwordfile=${PSWD_FILE} --interactive=false update-node-ssh \
         --sshuser "${USER}" --sshkeyfile ~/.ssh/id_rsa \
-        --nodehost "${HOSTNAME}" --installdir "${HOME_DIR}"/glassfish4 "${HOSTNAME}"
+        --nodehost "${HOSTNAME}" --installdir "${PAYARA_PATH} "${HOSTNAME}"
 
         # Start instance
         ssh ${USER}@das ${PAYARA_PATH}/glassfish/lib/nadmin --user=admin \
@@ -80,7 +78,7 @@ stop() {
     ssh ${USER}@das ${PAYARA_PATH}/glassfish/bin/asadmin --user=admin \
     --passwordfile=${PSWD_FILE} --interactive=false delete-node-ssh "${HOSTNAME}"
 
-    #~/glassfish4/glassfish/lib/nadmin --user=admin --passwordfile=${PSWD_FILE} \
+    #~/glassfish/lib/nadmin --user=admin --passwordfile=${PSWD_FILE} \
     #--interactive=false delete-local-instance --node "${HOSTNAME}" cluster1-"${HOSTNAME}"
 }
 
