@@ -6,7 +6,7 @@
 		"categories": [
 			"apps/clusters"
 		],
-		"name": "Auto Scaling GlassFish Cluster",
+		"name": "Auto Scalable GlassFish Cluster",
 		"logo": "https://github.com/jelastic-jps/glassfish/raw/master/glassfish-cluster/img/glassfish-logo.png",
 		"description": "Pre-configured and ready-to-work GlassFish Cluster with auto scaling triggers. The cluster consists of 1 DAS node, 2 Worker nodes and 1 HAProxy node as the load balancer. By default connection to the cluster is secured by Jelastic SSL.",
 		"env": {
