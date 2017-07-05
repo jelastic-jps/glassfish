@@ -1,7 +1,7 @@
-    var jps = {
-        'type': 'update',
-        'name': 'LogTest',
-        'onInstall': {
-            'log': 'Test OK'
-        }
+{
+    "type": "update",
+    "name": "LogTest",
+    "onInstall": {
+        "log": "Test OK"
     }
+}
