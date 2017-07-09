@@ -1,5 +1,5 @@
 {
-    "jpsType": "install",
+    "jpsType": "update",
     "jpsVersion": "0.99",
     "id": "glassfish-cluster",
     "categories": [
