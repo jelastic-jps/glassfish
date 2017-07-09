@@ -6,28 +6,30 @@
     "description": "Configure nodes for DAS cluster",
     "onBeforeScaleIn[cp]": "removeWorkers",
     "onInstall": [{
-        "api": "env.control.AddContainerVolumeByGroup",
-        "params": {
-            "nodeGroup": "cp",
-            "path": "/opt/glassfish/home/.ssh"
-        }
-    }, {
-        "api": "env.file.AddMountPointByGroup",
-        "params": {
-            "nodeGroup": "cp",
-            "path": "/opt/glassfish/home/.ssh",
-            "protocol": "nfs",
-            "sourceNodeId": "${nodes.cp.first.id}",
-            "sourcePath": "/opt/glassfish/home/.ssh",
-            "name": "ssk-keys"
-        }
-    }, {
         "forEach(nodes.cp)": {
             "if (${@i.ismaster})": [{
                 "setNodeDisplayName[${@i.id}]": "DAS",
                 "localhost:4848->das:4848": {
                     "nodeGroup": "cp",
                     "domain": "${@i.nodeType}${@i.id}-${env.domain}"
+                }
+            }, {
+                "log": "--> Add Volume"
+            }, {
+                "api": "env.control.AddContainerVolumeByGroup",
+                "params": {
+                    "nodeGroup": "cp",
+                    "path": "/opt/glassfish/home/.ssh"
+                }
+            }, {
+                "api": "env.file.AddMountPointByGroup",
+                "params": {
+                    "nodeGroup": "cp",
+                    "path": "/opt/glassfish/home/.ssh",
+                    "protocol": "nfs",
+                    "sourceNodeId": "${@i.id}",
+                    "sourcePath": "/opt/glassfish/home/.ssh",
+                    "name": "ssk-keys"
                 }
             }],
             "if (!${@i.ismaster})": [{
