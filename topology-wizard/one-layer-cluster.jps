@@ -1,89 +1,58 @@
 {
     "jpsType": "update",
     "jpsVersion": "0.99",
-    "id": "glassfish-cluster",
-    "categories": [
-        "apps/clusters"
-    ],
+    "id": "glassfish-cluster-one-layer-postconfig",
     "name": "Auto Scalable GlassFish Cluster",
-    "logo": "https://github.com/jelastic-jps/glassfish/raw/master/glassfish-cluster/img/glassfish-logo.png",
-    "description": "Pre-configured and ready-to-work GlassFish Cluster with auto scaling triggers. The cluster consists of 1 DAS node, 2 Worker nodes and 1 HAProxy node as the load balancer. By default connection to the cluster is secured by Jelastic SSL.",
-    "ssl": true,
-    "nodes": [{
-        "cloudlets": 16,
-        "nodeGroup": "cp",
-        "count": 1,
-        "nodeType": "glassfish",
-        "env": {
-            "ADMIN_PASSWORD": "test123",
-            "DAS_ADMIN_PASSWORD": "$ADMIN_PASSWORD",
-            "PORT_4848_TCP_ADDR": "4848",
-            "DAS_HOST": "$MASTER_HOST"
-        },
-        "volumes": [
-            "/opt/glassfish/home/.ssh"
-        ],
-        "volumeMounts": {
-            "/opt/glassfish/home/.ssh": {
-                "sourceNodeGroup": "cp",
-                "readOnly": false
-            }
-        }
-    }],
-    "onAfterScaleOut[cp]": "addWorkers",
+    "description": "Configure nodes for DAS cluster",
     "onBeforeScaleIn[cp]": "removeWorkers",
-    "_onAfterSetCloudletCount[cp]": "restart",
-    "_onAfterSetCloudletCount[vds]": "restart",
     "onInstall": [{
+        "api": "env.control.AddContainerVolumeByGroup",
+        "params": {
+            "nodeGroup": "cp",
+            "path": "/opt/glassfish/home/.ssh"
+        }
+    }, {
+        "api": "env.file.AddMountPointByGroup",
+        "params": {
+            "nodeGroup": "cp",
+            "path": "/opt/glassfish/home/.ssh",
+            "protocol": "nfs",
+            "sourceNodeId": "${nodes.cp.first.id}",
+            "sourcePath": "/opt/glassfish/home/.ssh",
+            "name": "ssk-keys"
+        }
+    }, {
         "forEach(nodes.cp)": {
             "if (${@i.ismaster})": [{
-                "setNodeDisplayName[${@i.id}]": "DAS"
+                "setNodeDisplayName[${@i.id}]": "DAS",
+                "localhost:4848->das:4848": {
+                    "nodeGroup": "cp",
+                    "domain": "${@i.nodeType}${@i.id}-${env.domain}"
+                }
             }],
             "if (!${@i.ismaster})": [{
                 "cmd[${@i.id}]": [
                     "echo -e \"MASTER_HOST=node${@i.id}-${env.domain}\n$(cat /.jelenv)\" > /.jelenv",
                     "echo -e \"DAS_HOST=node${@i.id}-${env.domain}\n$(cat /.jelenv)\" > /.jelenv",
-                    "echo -e \"DAS_PORT_4848_TCP_ADDR=$PORT_4848_TCP_ADDR\n$(cat /.jelenv)\" > /.jelenv",
-                    "jem service restart"
+                    "echo -e \"DAS_PORT_4848_TCP_ADDR=$PORT_4848_TCP_ADDR\n$(cat /.jelenv)\" > /.jelenv"
                 ],
                 "user": "root"
             }]
         }
     }],
     "actions": {
-        "-- @TODO": "merge addWorkers & initBalancer",
-        "addWorkers": [{
-            "forEach(event.response.nodes)": {
-                "addWorker": {
-                    "ip": "${@i.address}"
-                }
-            }
-        }],
         "removeWorkers": [{
             "forEach(event.response.nodes)": {
-                "cmd[${@i.id}]": "echo '$HOME_DIR/service.sh stop' | su - jelastic"
+                "cmd[${@i.id}]": "jem service stop",
+                "user": "root"
             }
         }],
-        "updateLink2Das": [{
-            "localhost:4848->das:4848": {
-                "nodeGroup": "cp"
+        "localhost:4848->das:4848": {
+            "cmd": {
+                "nodeId": "${this.nodeId}",
+                "nodeGroup": "${this.nodeGroup}",
+                "commands": "sed -i \"s/http:\\/\\/localhost:4848/https:\\/\\/${this.domain}:4848/g\" ${STACK_PATH}/glassfish/domains/domain1/docroot/index.html"
             }
-        }, {
-            "localhost:4848->das:4848": {
-                "nodeGroup": "vds"
-            }
-        }],
-        "deployApp": {
-            "cmd[vds]": [
-                "export URL=https://github.com/jelastic-jps/glassfish/blob/master/glassfish-cluster/test-app/clusterjsp.ear?raw=1",
-                "while (true); do fuser -n tcp 4848 && { sleep 60; jem compute deploy -c clusterjsp -a false -u $URL; break; } || sleep 2s; done"
-            ]
-        },
-        "deployApp2": {
-            "cmd[vds]": [
-                "sudo -u jelastic wget -O ${HOME_DIR}/clusterjsp.ear https://github.com/jelastic-jps/glassfish/blob/master/glassfish-cluster/test-app/clusterjsp.ear?raw=1",
-                "while (true); do fuser -n tcp 4848 && { sleep 60; sudo -u jelastic ${STACK_PATH}/bin/asadmin --user=admin --passwordfile=${PSWD_FILE} deploy --force=true --availabilityenabled=true --target cluster1 ${HOME_DIR}/clusterjsp.ear; exit $?; } || sleep 2s; done"
-            ]
         },
         "addAutoScalingTriggers": {
             "script": "https://github.com/jelastic-jps/glassfish/blob/master/glassfish-cluster/scripts/add-triggers.js?raw=1",
@@ -98,17 +67,10 @@
                 "scaleDownLoadPeriod": 10,
                 "cleanOldTriggers": true
             }
-        },
-        "localhost:4848->das:4848": {
-            "cmd": {
-                "nodeId": "${this.nodeId}",
-                "nodeGroup": "${this.nodeGroup}",
-                "commands": "sed -i \"s/http:\\/\\/localhost:4848/https:\\/\\/${nodes.vds.first.nodeType}${nodes.vds.first.id}-${env.domain}:4848/g\" ${STACK_PATH}/glassfish/domains/domain1/docroot/index.html"
-            }
         }
     },
     "success": {
-        "text": "<table style='font-size:14px'><tr><td>Admin Console:</td><td><a href='${nodes.vds.first.adminUrl}:4848' target='_blank'>${nodes.vds.first.adminUrl}:4848</a></td></tr><tr><td>Login:</td><td><b>admin</b></td></tr><tr><td>Password:</td><td><b>glassfish</b></td></tr></table>",
-        "email": "<table><tr><td>Admin Console:</td><td><a href='${nodes.vds.first.adminUrl}:4848' target='_blank'>${nodes.vds.first.adminUrl}:4848</a></td></tr><tr><td>Login:</td><td><b>admin</b></td></tr><tr><td>Password:</td><td><b>glassfish</b></td></tr></table>"
+        "text": "<table style='font-size:14px'><tr><td>Admin Console:</td><td><a href='${nodes.cp.first.adminUrl}:4848' target='_blank'>${nodes.cp.first.adminUrl}:4848</a></td></tr><tr><td>Login:</td><td><b>admin</b></td></tr><tr><td>Password:</td><td><b>glassfish</b></td></tr></table>",
+        "email": "<table><tr><td>Admin Console:</td><td><a href='${nodes.cp.first.adminUrl}:4848' target='_blank'>${nodes.cp.first.adminUrl}:4848</a></td></tr><tr><td>Login:</td><td><b>admin</b></td></tr><tr><td>Password:</td><td><b>glassfish</b></td></tr></table>"
     }
 }
