@@ -14,6 +14,14 @@
                     "domain": "${@i.nodeType}${@i.id}-${env.domain}"
                 }
             }, {
+                "log": "--> Set Env Vars"
+            }, {
+                "script": [
+                    "var resp = jelastic.env.control.GetContainerEnvVars('${env.envName}', session, ${@i.id})",
+                    "if (resp.result != 0) return resp",
+                    "return jelastic.env.control.SetContainerEnvVarsByGroup('${env.envName}', session, 'cp', resp.object)"
+                ]
+            }, {
                 "log": "--> Add Volume"
             }, {
                 "api": "env.control.AddContainerVolumeByGroup",
@@ -31,14 +39,6 @@
                     "sourcePath": "/opt/glassfish/home/.ssh",
                     "name": "ssk-keys"
                 }
-            }],
-            "if (!${@i.ismaster})": [{
-                "cmd[${@i.id}]": [
-                    "echo -e \"MASTER_HOST=node${@i.id}-${env.domain}\n$(cat /.jelenv)\" > /.jelenv",
-                    "echo -e \"DAS_HOST=node${@i.id}-${env.domain}\n$(cat /.jelenv)\" > /.jelenv",
-                    "echo -e \"DAS_PORT_4848_TCP_ADDR=$PORT_4848_TCP_ADDR\n$(cat /.jelenv)\" > /.jelenv"
-                ],
-                "user": "root"
             }]
         }
     }],
