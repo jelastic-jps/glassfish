@@ -42,13 +42,9 @@
             "if (!${@i.ismaster})": [{
                 "cmd[${@i.id}]": [
                     "echo -e \"MASTER_HOST=node${@i.id}-${env.domain}\n$(cat /.jelenv)\" > /.jelenv",
+                    "echo -e \"DAS_HOST=node${@i.id}-${env.domain}\n$(cat /.jelenv)\" > /.jelenv",
                     "echo -e \"DAS_PORT_4848_TCP_ADDR=$PORT_4848_TCP_ADDR\n$(cat /.jelenv)\" > /.jelenv",
-                    "#restart jelinit service",
-                    "killall -9 service.sh &>> /var/log/run.log",
-                    "killall -9 java.orig &>> /var/log/run.log",
-                    "killall -9 java &>> /var/log/run.log",
-                    "rm -f /var/run/lock/jelinit.lock",
-                    "/etc/init.d/jelinit start"
+                    "jem service restart"
                 ],
                 "user": "root"
             }]
