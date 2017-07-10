@@ -51,20 +51,6 @@
                 "nodeGroup": "${this.nodeGroup}",
                 "commands": "sed -i \"s/http:\\/\\/localhost:4848/https:\\/\\/${this.domain}:4848/g\" ${STACK_PATH}/glassfish/domains/domain1/docroot/index.html"
             }
-        },
-        "addAutoScalingTriggers": {
-            "script": "https://github.com/jelastic-jps/glassfish/blob/master/glassfish-cluster/scripts/add-triggers.js?raw=1",
-            "params": {
-                "nodeGroup": "cp",
-                "resourceType": "MEM",
-                "scaleUpValue": 70,
-                "scaleUpLimit": 10,
-                "scaleUpLoadPeriod": 1,
-                "scaleDownValue": 40,
-                "scaleDownLimit": 2,
-                "scaleDownLoadPeriod": 10,
-                "cleanOldTriggers": true
-            }
         }
     },
     "success": {
