@@ -8,11 +8,7 @@
     "onInstall": [{
         "forEach(nodes.cp)": {
             "if (${@i.ismaster})": [{
-                "setNodeDisplayName[${@i.id}]": "DAS",
-                "localhost:4848->das:4848": {
-                    "nodeGroup": "cp",
-                    "domain": "${@i.nodeType}${@i.id}-${env.domain}"
-                }
+                "setNodeDisplayName[${@i.id}]": "DAS"
             }, {
                 "log": "--> Set Env Vars"
             }, {
