@@ -15,7 +15,7 @@
                 "script": [
                     "var resp = jelastic.env.control.GetContainerEnvVars('${env.envName}', session, ${@i.id})",
                     "if (resp.result != 0) return resp",
-                    "return jelastic.env.control.SetContainerEnvVarsByGroup('${env.envName}', session, 'cp', resp.object)"
+                    "return jelastic.env.control.SetContainerEnvVars('${env.envName}', session, ${@i.id}, resp.object)"
                 ]
             }, {
                 "log": "--> Add Volume"
