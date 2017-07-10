@@ -5,6 +5,7 @@
     "name": "Auto Scalable GlassFish Cluster",
     "description": "Configure nodes for DAS cluster",
     "onBeforeScaleIn[cp]": "removeWorkers",
+    "onBeforeServiceScaleOut[cp]": "setEnvVars",
     "onInstall": [{
         "forEach(nodes.cp)": {
             "if (${@i.ismaster})": [{
@@ -13,9 +14,20 @@
                 "log": "--> Set Env Vars"
             }, {
                 "script": [
-                    "var resp = jelastic.env.control.GetContainerEnvVars('${env.envName}', session, ${@i.id})",
-                    "if (resp.result != 0) return resp",
-                    "return jelastic.env.control.SetContainerEnvVars('${env.envName}', session, ${@i.id}, resp.object)"
+                    "var masterId = '${@i.id}';",
+                    "var envName = '${env.envName}';",
+                    "var resp = jelastic.env.control.GetEnvInfo(envName, session);",
+                    "if (resp.result != 0) return resp;",
+                    "var n = resp.nodes;",
+                    "var resp = jelastic.env.control.GetContainerEnvVars(envName, session, masterId);",
+                    "if (resp.result != 0) return resp;",
+                    "var vars = resp.object;",
+                    "for (var i = 0, l = n.length; i < l; i++) {",
+                    "    if (n[i].id == masterId || n[i].nodeGroup != 'cp') continue;",
+                    "    resp = jelastic.env.control.SetContainerEnvVars(envName, session, n[i].id, vars);",
+                    "    if (resp.result != 0) return resp;",
+                    "}",
+                    "return resp;"
                 ]
             }, {
                 "log": "--> Add Volume"
@@ -45,6 +57,22 @@
                 "user": "root"
             }
         }],
+        "setEnvVars": {
+            "forEach(nodes.cp)": {
+                "if (${@i.ismaster})": {
+                    "forEach(n:event.response.nodes)": {
+                        "script": [
+                            "var masterId = '${@i.id}';",
+                            "var envName = '${env.envName}';",
+                            "var resp = jelastic.env.control.GetContainerEnvVars(envName, session, masterId);",
+                            "if (resp.result != 0) return resp;",
+                            "var vars = resp.object;",
+                            "return jelastic.env.control.SetContainerEnvVars(envName, session, ${@n.id}, vars);"
+                        ]
+                    }
+                }
+            }
+        },
         "localhost:4848->das:4848": {
             "cmd": {
                 "nodeId": "${this.nodeId}",
