@@ -46,8 +46,8 @@
             }, {
                 "forEach(nodes.cp)": {
                     "api": "env.control.LinkDockerNodes",
-                    "sourceNodeId": "${nodes.cp.first.id}",
-                    "targetNodeId": "${nodes.vds.first.id}",
+                    "sourceNodeId": "${nodes.vds.first.id}",
+                    "targetNodeId": "${@i.id}",
                     "alias": "das",
                     "groupAlias": "das"
                 }
