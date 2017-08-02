@@ -5,8 +5,6 @@
     "name": "GlassFish Cluster",
     "logo": "https://github.com/jelastic-jps/glassfish/raw/master/glassfish-cluster/img/glassfish-logo.png",
     "description": "Transforms standalone nodes to cluster",
-    "onAfterScaleOut[cp]": "addWorkers",
-    "onBeforeScaleIn[cp]": "removeWorkers",
     "globals": {
         "mountPath": "/opt/glassfish/home/.ssh"
     },
