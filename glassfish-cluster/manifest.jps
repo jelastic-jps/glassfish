@@ -26,7 +26,13 @@
                 "${globals.mountPath}"
             ]
         },
-        "installAddon": "mount-ssh-keys"
+        "installAddon": "mount-ssh-keys",
+        "restartContainers": {
+            "nodeGroup": "vds"
+        },
+        "restartContainers": {
+            "nodeGroup": "cp"
+        }
     }],
     "addons": [{
         "id": "mount-ssh-keys",
