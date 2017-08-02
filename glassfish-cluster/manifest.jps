@@ -7,8 +7,8 @@
     "description": "Transforms standalone nodes to cluster",
     "onAfterScaleOut[cp]": "addWorkers",
     "onBeforeScaleIn[cp]": "removeWorkers",
-    "globals" : {
-        "mountPath" : "/opt/glassfish/home/.ssh"
+    "globals": {
+        "mountPath": "/opt/glassfish/home/.ssh"
     },
     "onInstall": [{
         "addNodes": {
@@ -31,25 +31,32 @@
     "addons": [{
         "id": "mount-ssh-keys",
         "onInstall": [{
-            "api": "env.control.AddContainerVolumeByGroup",
-            "nodeGroup": "cp",
-            "path": "${globals.mountPath}"
-        }, {
-            "api": "env.file.AddMountPointByGroup",
-            "nodeGroup": "cp",
-            "path": "${globals.mountPath}",
-            "protocol": "nfs",
-            "sourcePath": "${globals.mountPath}",
-            "sourceNodeId": "${nodes.vds.first.id}",
-            "name": "SSH Keys",
-            "readOnly": true
-        }, {
-            "api": "env.control.LinkDockerNodes",
-            "sourceNodeId": "${nodes.vds.first.id}",
-            "targetNodeId": "${nodes.cp.first.id}",
-            "alias": "das",
-            "groupAlias": "cp"
-        }]
+                "api": "env.control.AddContainerVolumeByGroup",
+                "nodeGroup": "cp",
+                "path": "${globals.mountPath}"
+            }, {
+                "api": "env.file.AddMountPointByGroup",
+                "nodeGroup": "cp",
+                "path": "${globals.mountPath}",
+                "protocol": "nfs",
+                "sourcePath": "${globals.mountPath}",
+                "sourceNodeId": "${nodes.vds.first.id}",
+                "name": "SSH Keys",
+                "readOnly": false
+            }, {
+                "forEach(nodes.cp)": {
+                    "api": "env.control.LinkDockerNodes",
+                    "sourceNodeId": "${nodes.vds.first.id}",
+                    "targetNodeId": "${@i.id}",
+                    "alias": "das",
+                    "groupAlias": "das"
+                }
+            },
+            "updateLink2Das"
+        ],
+        "success": {
+            "text": "<table style='font-size:14px'><tr><td>Admin Console:</td><td><a href='${nodes.vds.first.adminUrl}' target='_blank'>${nodes.vds.first.adminUrl}</a></td></tr><tr><td>Login:</td><td><b>admin</b></td></tr><tr><td>Password:</td><td><b>glassfish</b></td></tr></table>"
+        }
     }],
     "actions": {
         "updateLink2Das": [{
@@ -68,8 +75,5 @@
                 "commands": "sed -i \"s/http:\\/\\/localhost:4848/https:\\/\\/${nodes.vds.first.nodeType}${nodes.vds.first.id}-${env.domain}:4848/g\" ${STACK_PATH}/glassfish/domains/domain1/docroot/index.html"
             }
         }
-    },
-    "success": {
-        "text": "<table style='font-size:14px'><tr><td>Admin Console:</td><td><a href='${nodes.vds.first.adminUrl}:4848' target='_blank'>${nodes.vds.first.adminUrl}:4848</a></td></tr><tr><td>Login:</td><td><b>admin</b></td></tr><tr><td>Password:</td><td><b>glassfish</b></td></tr></table>"
     }
 }
