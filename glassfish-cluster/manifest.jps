@@ -6,7 +6,8 @@
     "logo": "https://github.com/jelastic-jps/glassfish/raw/master/glassfish-cluster/img/glassfish-logo.png",
     "description": "Transforms standalone nodes to cluster",
     "globals": {
-        "mountPath": "/opt/glassfish/home/.ssh"
+        "mountPath": "/opt/glassfish/home/.ssh",
+        "port": "28080"
     },
     "onInstall": [{
         "addNodes": {
@@ -23,17 +24,12 @@
             "dockerVolumes": [
                 "${globals.mountPath}"
             ]
-        },
-        "installAddon": "mount-ssh-keys",
-        "restartContainers": {
-            "nodeGroup": "vds"
-        },
-        "restartContainers": {
-            "nodeGroup": "cp"
         }
+    }, {
+        "installAddon": "configure"
     }],
     "addons": [{
-        "id": "mount-ssh-keys",
+        "id": "configure",
         "onInstall": [{
                 "api": "env.control.AddContainerVolumeByGroup",
                 "nodeGroup": "cp",
@@ -54,6 +50,16 @@
                     "targetNodeId": "${@i.id}",
                     "alias": "das",
                     "groupAlias": "das"
+                }
+            }, {
+                "cmd[cp]": [
+                    "echo JELASTIC_EXPOSE=${globals.port} >> /.jelenv",
+                    "iptables -t nat -L 2>> /var/log/run.log | grep -qE \"REDIRECT.*${globals.port}\" || iptables -t nat -I PREROUTING -p tcp -m tcp --dport 80 -j REDIRECT --to-ports ${globals.port} -m comment --comment \"GlassFish HTTP Autoredirect\" >> /var/log/run.log"
+                ],
+                "user": "root"
+            }, {
+                "restartContainers": {
+                    "nodeGroup": "cp"
                 }
             },
             "updateLink2Das"
