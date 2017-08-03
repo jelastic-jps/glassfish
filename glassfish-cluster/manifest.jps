@@ -44,19 +44,31 @@
                 "name": "SSH Keys",
                 "readOnly": false
             }, {
-                "forEach(nodes.cp)": {
+                "forEach(nodes.cp)": [{
                     "api": "env.control.LinkDockerNodes",
                     "sourceNodeId": "${nodes.vds.first.id}",
                     "targetNodeId": "${@i.id}",
                     "alias": "das",
                     "groupAlias": "das"
-                }
+                }, {
+                    "cmd[${@i.id}]": [
+                        "echo JELASTIC_EXPOSE=${globals.port} >> /.jelenv",
+                        "iptables -t nat -L 2>> /var/log/run.log | grep -qE \"REDIRECT.*${globals.port}\" || iptables -t nat -I PREROUTING -p tcp -m tcp --dport 80 -j REDIRECT --to-ports ${globals.port} -m comment --comment \"GlassFish HTTP Autoredirect\" >> /var/log/run.log"
+                    ],
+                    "user": "root"
+                }, {
+                    "if (${@i.ismaster})": {
+                        "cmd[${@i.id}]": [
+                            "iptables -t nat -A PREROUTING -p tcp -d ${@i.address} --dport 4848 -j DNAT --to-destination ${nodes.vds.first.address}",
+                            "iptables -t nat -A POSTROUTING -p tcp --dst ${nodes.vds.first.address} --dport 4848 -j SNAT --to-source ${@i.address}"
+                        ],
+                        "user": "root"
+                    }
+                }]
             }, {
-                "cmd[cp]": [
-                    "echo JELASTIC_EXPOSE=${globals.port} >> /.jelenv",
-                    "iptables -t nat -L 2>> /var/log/run.log | grep -qE \"REDIRECT.*${globals.port}\" || iptables -t nat -I PREROUTING -p tcp -m tcp --dport 80 -j REDIRECT --to-ports ${globals.port} -m comment --comment \"GlassFish HTTP Autoredirect\" >> /var/log/run.log"
-                ],
-                "user": "root"
+                "restartContainers": {
+                    "nodeGroup": "vds"
+                }
             }, {
                 "restartContainers": {
                     "nodeGroup": "cp"
