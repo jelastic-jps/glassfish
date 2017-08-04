@@ -52,11 +52,7 @@
                     "alias": "das",
                     "groupAlias": "das"
                 }, {
-                    "cmd[${@i.id}]": [
-                        "echo JELASTIC_EXPOSE=${globals.port} >> /.jelenv",
-                        "iptables -t nat -L 2>> /var/log/run.log | grep -qE \"REDIRECT.*${globals.port}\" || iptables -t nat -I PREROUTING -p tcp -m tcp --dport 80 -j REDIRECT --to-ports ${globals.port} -m comment --comment \"GlassFish HTTP Autoredirect\" >> /var/log/run.log"
-                    ],
-                    "user": "root"
+                    "expose:28080->80": "${@i.id}"
                 }, {
                     "if (${@i.ismaster})": {
                         "cmd[${@i.id}]": [
@@ -80,7 +76,24 @@
             "text": "<table style='font-size:14px'><tr><td>Admin Console:</td><td><a href='${nodes.vds.first.adminUrl}' target='_blank'>${nodes.vds.first.adminUrl}</a></td></tr><tr><td>Login:</td><td><b>admin</b></td></tr><tr><td>Password:</td><td><b>glassfish</b></td></tr></table>"
         }
     }],
+    "onBeforeServiceScaleOut[cp]": {
+        "forEach(event.response.nodes)": {
+            "expose:28080->80": "${@i.id}"
+        }
+    },
+    "onBeforeScaleIn[cp]": {
+        "forEach(event.response.nodes)": {
+            "cmd[${@i.id}]": "$HOME_DIR/service.sh delete"
+        }
+    },
     "actions": {
+        "expose:28080->80": {
+            "cmd[${@i.id}]": [
+                "echo JELASTIC_EXPOSE=${globals.port} >> /.jelenv",
+                "iptables -t nat -L 2>> /var/log/run.log | grep -qE \"REDIRECT.*${globals.port}\" || iptables -t nat -I PREROUTING -p tcp -m tcp --dport 80 -j REDIRECT --to-ports ${globals.port} -m comment --comment \"GlassFish HTTP Autoredirect\" >> /var/log/run.log"
+            ],
+            "user": "root"
+        },
         "updateLink2Das": [{
             "localhost:4848->das:4848": {
                 "nodeGroup": "cp"
