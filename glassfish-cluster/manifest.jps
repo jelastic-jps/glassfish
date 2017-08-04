@@ -23,7 +23,8 @@
             },
             "dockerVolumes": [
                 "${globals.mountPath}"
-            ]
+            ],
+            "startService": false
         }
     }, {
         "installAddon": "configure"
@@ -66,9 +67,8 @@
                     }
                 }]
             }, {
-                "restartContainers": {
-                    "nodeGroup": "vds"
-                }
+                "api": "env.control.ExecDockerRunCmd",
+                "nodeId": "${nodes.vds.first.id}"
             }, {
                 "restartContainers": {
                     "nodeGroup": "cp"
@@ -94,7 +94,7 @@
             "cmd": {
                 "nodeId": "${this.nodeId}",
                 "nodeGroup": "${this.nodeGroup}",
-                "commands": "sed -i \"s/http:\\/\\/localhost:4848/https:\\/\\/${nodes.vds.first.nodeType}${nodes.vds.first.id}-${env.domain}:4848/g\" ${STACK_PATH}/glassfish/domains/domain1/docroot/index.html"
+                "commands": "sed -i \"s/http:\\/\\/localhost:4848/https:\\/\\/${nodes.vds.first.adminUrl}/g\" ${STACK_PATH}/glassfish/domains/domain1/docroot/index.html"
             }
         }
     }
