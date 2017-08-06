@@ -53,7 +53,8 @@
                 "displayName": "DAS",
                 "nodeType": "docker",
                 "nodeGroup": "das",
-                "dockerName": "devbeta/glassfish:4.1.2-jdk-1.8.0_131",
+                "dockerName": "devbeta/glassfish",
+                "dockerTag": "4.1.2-jdk-1.8.0_131",
                 "metadata": {
                     "layer": "das"
                 },
