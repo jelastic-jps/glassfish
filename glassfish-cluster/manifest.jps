@@ -13,7 +13,7 @@
         "if (nodes.cp.length > 1)": "buildCluster"
     },
     "onBeforeServiceScaleOut[cp]": [{
-        "if (nodes.vds)": {
+        "if (nodes.das)": {
             "forEach(n:nodes.cp)": {
                 "if (${@n.ismaster})": {
                     "forEach(event.response.nodes)": [{
@@ -31,7 +31,7 @@
             }
         }
     }, {
-        "if (!nodes.vds)": "buildCluster"
+        "if (!nodes.das)": "buildCluster"
     }],
     "onBeforeScaleIn[cp]": {
         "forEach(event.response.nodes)": {
@@ -43,10 +43,10 @@
             "addNodes": {
                 "cloudlets": 16,
                 "displayName": "DAS",
-                "nodeGroup": "vds",
-                "nodeType": "glassfish-das",
+                "nodeGroup": "das",
+                "dockerName": "devbeta/glassfish:4.1.2-jdk-1.8.0_131",
                 "metadata": {
-                    "layer": "vds"
+                    "layer": "das"
                 },
                 "dockerEnvVars": {
                     "DAS": "true"
@@ -61,8 +61,8 @@
         }],
         "iptables": {
             "cmd[${this.id}]": [
-                "iptables -t nat -${this.act} PREROUTING -p tcp -d ${this.address} --dport 4848 -j DNAT --to-destination ${nodes.vds.first.address}",
-                "iptables -t nat -${this.act} POSTROUTING -p tcp --dst ${nodes.vds.first.address} --dport 4848 -j SNAT --to-source ${this.address}"
+                "iptables -t nat -${this.act} PREROUTING -p tcp -d ${this.address} --dport 4848 -j DNAT --to-destination ${nodes.das.first.address}",
+                "iptables -t nat -${this.act} POSTROUTING -p tcp --dst ${nodes.das.first.address} --dport 4848 -j SNAT --to-source ${this.address}"
             ],
             "user": "root"
         },
@@ -78,13 +78,13 @@
             }
         }, {
             "localhost:4848->das:4848": {
-                "nodeGroup": "vds"
+                "nodeGroup": "das"
             }
         }],
         "localhost:4848->das:4848": {
             "cmd": {
                 "nodeGroup": "${this.nodeGroup}",
-                "commands": "sed -i \"s/http:\\/\\/localhost:4848/https:\\/\\/node${nodes.vds.first.id}-${env.domain}:4848/g\" ${STACK_PATH}/glassfish/domains/domain1/docroot/index.html"
+                "commands": "sed -i \"s/http:\\/\\/localhost:4848/https:\\/\\/node${nodes.das.first.id}-${env.domain}:4848/g\" ${STACK_PATH}/glassfish/domains/domain1/docroot/index.html"
             }
         }
     },
@@ -100,13 +100,13 @@
                 "path": "${globals.mountPath}",
                 "protocol": "nfs",
                 "sourcePath": "${globals.mountPath}",
-                "sourceNodeId": "${nodes.vds.first.id}",
+                "sourceNodeId": "${nodes.das.first.id}",
                 "name": "SSH Keys",
                 "readOnly": false
             }, {
                 "forEach(nodes.cp)": [{
                     "api": "env.control.LinkDockerNodes",
-                    "sourceNodeId": "${nodes.vds.first.id}",
+                    "sourceNodeId": "${nodes.das.first.id}",
                     "targetNodeId": "${@i.id}",
                     "alias": "das",
                     "groupAlias": "das"
@@ -125,7 +125,7 @@
                 }]
             }, {
                 "api": "env.control.ExecDockerRunCmd",
-                "nodeId": "${nodes.vds.first.id}"
+                "nodeId": "${nodes.das.first.id}"
             }, {
                 "restartContainers": {
                     "nodeGroup": "cp"
@@ -134,7 +134,7 @@
             "updateLink2Das"
         ],
         "success": {
-            "text": "<table style='font-size:14px'><tr><td>Admin Console:</td><td><a href='${nodes.vds.first.adminUrl}' target='_blank'>${nodes.vds.first.adminUrl}</a></td></tr><tr><td>Login:</td><td><b>admin</b></td></tr><tr><td>Password:</td><td><b>glassfish</b></td></tr></table>"
+            "text": "<table style='font-size:14px'><tr><td>Admin Console:</td><td><a href='${nodes.das.first.adminUrl}' target='_blank'>${nodes.das.first.adminUrl}</a></td></tr><tr><td>Login:</td><td><b>admin</b></td></tr><tr><td>Password:</td><td><b>glassfish</b></td></tr></table>"
         }
     }]
 }
