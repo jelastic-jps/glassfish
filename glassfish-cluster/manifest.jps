@@ -52,14 +52,12 @@
                     "alias": "das",
                     "groupAlias": "das"
                 }, {
-                    "expose:28080->80": {
-                        "id": "${@i.id}"
-                    }
-                }, {
-                    "redirect": {
-                        "id": "${@i.id}",
-                        "address": "${@i.address}",
-                        "act": "A"
+                    "if (${@i.ismaster})": {
+                        "iptables": {
+                            "id": "${@i.id}",
+                            "address": "${@i.address}",
+                            "act": "A"
+                        }
                     }
                 }]
             }, {
@@ -80,14 +78,10 @@
         "forEach(n:nodes.cp)": {
             "if (${@n.ismaster})": {
                 "forEach(event.response.nodes)": [{
-                    "redirect": {
+                    "iptables": {
                         "id": "${@i.id}",
                         "address": "${@n.address}",
                         "act": "D"
-                    }
-                }, {
-                    "expose:28080->80": {
-                        "id": "${@i.id}"
                     }
                 }]
             }
@@ -99,7 +93,7 @@
         }
     },
     "actions": {
-        "redirect": {
+        "iptables": {
             "cmd[${this.id}]": [
                 "iptables -t nat -${this.act} PREROUTING -p tcp -d ${this.address} --dport 4848 -j DNAT --to-destination ${nodes.vds.first.address}",
                 "iptables -t nat -${this.act} POSTROUTING -p tcp --dst ${nodes.vds.first.address} --dport 4848 -j SNAT --to-source ${this.address}"
