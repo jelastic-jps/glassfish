@@ -67,11 +67,37 @@
                 "startService": false
             }
         }, {
-            "if (${this.redeploy})": {
-                "installAddon": "redeployApps"
+            "installAddon": {
+                "id": "configureVolumesAndLinks",
+                "settings": {
+                    "redeploy": "${this.redeploy}"
+                }
             }
-        }, {
-            "installAddon": "configureVolumesAndLinks"
+        }],
+        "redeployApps": [{
+            "cmd[${nodes.cp.first.id}]": [
+                "asadmin=$STACK_PATH/bin/asadmin",
+                "remote_host=\"--host ${nodes.das.first.address} --port 4848 --secure --user $ADMIN_USER --passwordfile $PSWD_FILE\"",
+                "echo 'Checking cluster status - 10 attempts'",
+                "for ((i = 1; i < 11; i++))",
+                "  do CLUSTER_STATUS=$( $asadmin $remote_host list-clusters | head -n 1 )",
+                "  echo \"$i - $CLUSTER_STATUS\"",
+                "  grep -q -E 'cluster1 ([a-z ]*)?running' <<< $CLUSTER_STATUS && { echo 'OK'; break; } || { sleep 3; }",
+                "done",
+                "echo '------'",
+                "echo 'Redeploying apps from standalone server to cluster1'",
+                "cd $STACK_PATH/glassfish/domains/domain1/applications/__internal/",
+                "pwd",
+                "for c in *",
+                "  do for f in $c/*",
+                "    do echo 'Deploying $f to $c...'",
+                "    [ \"x${c}\" == \"xROOT\" ] && deploy_context=\"--contextroot /\" || deploy_context=\"--contextroot ${c}\"",
+                "    cmd=\"$asadmin $remote_host deploy --availabilityenabled=true --asyncreplication=false --force=true --target cluster1 $deploy_context $f\"",
+                "    echo $cmd",
+                "    $cmd",
+                "  done",
+                "done"
+            ]
         }],
         "iptables": {
             "cmd[${this.id}]": [
@@ -103,34 +129,6 @@
         }
     },
     "addons": [{
-        "id": "redeployApps",
-        "onInstall": [{
-            "cmd[${nodes.cp.first.id}]": [
-                ". /.jelenv",
-                "asadmin=$STACK_PATH/bin/asadmin",
-                "remote_host=\"--host ${nodes.das.first.address} --port 4848 --secure --user $ADMIN_USER --passwordfile $PSWD_FILE\"",
-                "echo 'Checking cluster status - 10 attempts'",
-                "for ((i = 1; i < 11; i++))",
-                "  do CLUSTER_STATUS=$( $asadmin $remote_host list-clusters | head -n 1 )",
-                "  echo \"$i - $CLUSTER_STATUS\"",
-                "  grep -q -E 'cluster1 ([a-z ]*)?running' <<< $CLUSTER_STATUS && { echo 'OK'; break; } || { sleep 3; }",
-                "done",
-                "echo '------'",
-                "echo 'Redeploying apps from standalone server to cluster1'",
-                "cd $STACK_PATH/glassfish/domains/domain1/applications/__internal/",
-                "pwd",
-                "for c in *",
-                "  do for f in $c/*",
-                "    do echo 'Deploying $f to $c...'",
-                "    [ \"x${c}\" == \"xROOT\" ] && deploy_context=\"--contextroot /\" || deploy_context=\"--contextroot ${c}\"",
-                "    cmd=\"$asadmin $remote_host deploy --availabilityenabled=true --asyncreplication=false --force=true --target cluster1 $deploy_context $f\"",
-                "    echo $cmd",
-                "    $cmd",
-                "  done",
-                "done"
-            ]
-        }]
-    }, {
         "id": "configureVolumesAndLinks",
         "onInstall": [{
                 "api": "env.control.AddContainerVolumeByGroup",
@@ -168,6 +166,8 @@
             }, {
                 "api": "env.control.ExecDockerRunCmd",
                 "nodeId": "${nodes.das.first.id}"
+            }, {
+                "if (${settings.redeploy})": "redeployApps"
             }, {
                 "restartContainers": {
                     "nodeGroup": "cp"
