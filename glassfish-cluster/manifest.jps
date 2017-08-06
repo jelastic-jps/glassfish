@@ -9,26 +9,85 @@
         "mountPath": "/opt/glassfish/home/.ssh",
         "port": "28080"
     },
-    "onInstall": [{
-        "addNodes": {
-            "cloudlets": 16,
-            "displayName": "DAS",
-            "nodeGroup": "vds",
-            "nodeType": "glassfish-das",
-            "metadata": {
-                "layer": "vds"
-            },
-            "dockerEnvVars": {
-                "DAS": "true"
-            },
-            "dockerVolumes": [
-                "${globals.mountPath}"
-            ],
-            "startService": false
+    "onInstall": {
+        "if (nodes.cp.length > 1)": "buildCluster"
+    },
+    "onBeforeServiceScaleOut[cp]": [{
+        "if (nodes.vds)": {
+            "forEach(n:nodes.cp)": {
+                "if (${@n.ismaster})": {
+                    "forEach(event.response.nodes)": [{
+                        "iptables": {
+                            "id": "${@i.id}",
+                            "address": "${@n.address}",
+                            "act": "D"
+                        }
+                    }, {
+                        "expose:28080->80": {
+                            "id": "${@i.id}"
+                        }
+                    }]
+                }
+            }
         }
     }, {
-        "installAddon": "configure"
+        "if (!nodes.vds)": "buildCluster"
     }],
+    "onBeforeScaleIn[cp]": {
+        "forEach(event.response.nodes)": {
+            "cmd[${@i.id}]": "$HOME_DIR/service.sh delete"
+        }
+    },
+    "actions": {
+        "buildCluster": [{
+            "addNodes": {
+                "cloudlets": 16,
+                "displayName": "DAS",
+                "nodeGroup": "vds",
+                "nodeType": "glassfish-das",
+                "metadata": {
+                    "layer": "vds"
+                },
+                "dockerEnvVars": {
+                    "DAS": "true"
+                },
+                "dockerVolumes": [
+                    "${globals.mountPath}"
+                ],
+                "startService": false
+            }
+        }, {
+            "installAddon": "configure"
+        }],
+        "iptables": {
+            "cmd[${this.id}]": [
+                "iptables -t nat -${this.act} PREROUTING -p tcp -d ${this.address} --dport 4848 -j DNAT --to-destination ${nodes.vds.first.address}",
+                "iptables -t nat -${this.act} POSTROUTING -p tcp --dst ${nodes.vds.first.address} --dport 4848 -j SNAT --to-source ${this.address}"
+            ],
+            "user": "root"
+        },
+        "expose:28080->80": {
+            "cmd[${this.id}]": [
+                "echo JELASTIC_EXPOSE=${globals.port} >> /.jelenv"
+            ],
+            "user": "root"
+        },
+        "updateLink2Das": [{
+            "localhost:4848->das:4848": {
+                "nodeGroup": "cp"
+            }
+        }, {
+            "localhost:4848->das:4848": {
+                "nodeGroup": "vds"
+            }
+        }],
+        "localhost:4848->das:4848": {
+            "cmd": {
+                "nodeGroup": "${this.nodeGroup}",
+                "commands": "sed -i \"s/http:\\/\\/localhost:4848/https:\\/\\/node${nodes.vds.first.id}-${env.domain}:4848/g\" ${STACK_PATH}/glassfish/domains/domain1/docroot/index.html"
+            }
+        }
+    },
     "addons": [{
         "id": "configure",
         "onInstall": [{
@@ -77,57 +136,5 @@
         "success": {
             "text": "<table style='font-size:14px'><tr><td>Admin Console:</td><td><a href='${nodes.vds.first.adminUrl}' target='_blank'>${nodes.vds.first.adminUrl}</a></td></tr><tr><td>Login:</td><td><b>admin</b></td></tr><tr><td>Password:</td><td><b>glassfish</b></td></tr></table>"
         }
-    }],
-    "onBeforeServiceScaleOut[cp]": {
-        "forEach(n:nodes.cp)": {
-            "if (${@n.ismaster})": {
-                "forEach(event.response.nodes)": [{
-                    "iptables": {
-                        "id": "${@i.id}",
-                        "address": "${@n.address}",
-                        "act": "D"
-                    }
-                }, {
-                    "expose:28080->80": {
-                        "id": "${@i.id}"
-                    }
-                }]
-            }
-        }
-    },
-    "onBeforeScaleIn[cp]": {
-        "forEach(event.response.nodes)": {
-            "cmd[${@i.id}]": "$HOME_DIR/service.sh delete"
-        }
-    },
-    "actions": {
-        "iptables": {
-            "cmd[${this.id}]": [
-                "iptables -t nat -${this.act} PREROUTING -p tcp -d ${this.address} --dport 4848 -j DNAT --to-destination ${nodes.vds.first.address}",
-                "iptables -t nat -${this.act} POSTROUTING -p tcp --dst ${nodes.vds.first.address} --dport 4848 -j SNAT --to-source ${this.address}"
-            ],
-            "user": "root"
-        },
-        "expose:28080->80": {
-            "cmd[${this.id}]": [
-                "echo JELASTIC_EXPOSE=${globals.port} >> /.jelenv"
-            ],
-            "user": "root"
-        },
-        "updateLink2Das": [{
-            "localhost:4848->das:4848": {
-                "nodeGroup": "cp"
-            }
-        }, {
-            "localhost:4848->das:4848": {
-                "nodeGroup": "vds"
-            }
-        }],
-        "localhost:4848->das:4848": {
-            "cmd": {
-                "nodeGroup": "${this.nodeGroup}",
-                "commands": "sed -i \"s/http:\\/\\/localhost:4848/https:\\/\\/node${nodes.vds.first.id}-${env.domain}:4848/g\" ${STACK_PATH}/glassfish/domains/domain1/docroot/index.html"
-            }
-        }
-    }
+    }]
 }
