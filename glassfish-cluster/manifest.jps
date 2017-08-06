@@ -10,7 +10,11 @@
         "port": "28080"
     },
     "onInstall": {
-        "if (nodes.cp.length > 1)": "buildCluster"
+        "if (nodes.cp.length > 1)": {
+            "buildCluster": {
+                "redeploy": "false"
+            }
+        }
     },
     "onBeforeServiceScaleOut[cp]": [{
         "if (nodes.das)": {
@@ -31,7 +35,11 @@
             }
         }
     }, {
-        "if (!nodes.das)": "buildCluster"
+        "if (!nodes.das)": {
+            "buildCluster": {
+                "redeploy": "true"
+            }
+        }
     }],
     "onBeforeScaleIn[cp]": {
         "forEach(event.response.nodes)": {
@@ -57,7 +65,34 @@
                 "startService": false
             }
         }, {
-            "installAddon": "configure"
+            "if (${this.redeploy})": "reployApps"
+        }, {
+            "installAddon": "configureVolumesAndLinks"
+        }],
+        "redeployApps": [{
+            "cmd[${nodes.cp.first.id}]": [
+                "asadmin=$STACK_PATH/bin/asadmin",
+                "remote_host=\"--host ${DAS_PORT_4848_TCP_ADDR} --port ${DAS_PORT_4848_TCP_PORT} --secure --user $ADMIN_USER --passwordfile $PSWD_FILE\"",
+                "echo 'Checking cluster status - 10 attempts'",
+                "for ((i = 1; i < 11; i++))",
+                "  do CLUSTER_STATUS=$( $asadmin $remote_host list-clusters | head -n 1 )",
+                "  echo \"$i - $CLUSTER_STATUS\"",
+                "  grep -q -E 'cluster1 ([a-z ]*)?running' <<< $CLUSTER_STATUS && { echo 'OK'; break; } || { sleep 3; }",
+                "done",
+                "echo '------'",
+                "echo 'Redeploying apps from standalone server to cluster1'",
+                "cd $STACK_PATH/glassfish/domains/domain1/applications/__internal/",
+                "pwd",
+                "for c in *",
+                "  do for f in $c/*",
+                "    do echo 'Deploying $f to $c...'",
+                "    [ \"x${c}\" == \"xROOT\" ] && deploy_context=\"--contextroot /\" || deploy_context=\"--contextroot ${c}\"",
+                "    cmd=\"$asadmin $remote_host deploy --availabilityenabled=true --asyncreplication=false --force=true --target cluster1 $deploy_context $f\"",
+                "    echo $cmd",
+                "    $cmd",
+                "  done",
+                "done"
+            ]
         }],
         "iptables": {
             "cmd[${this.id}]": [
@@ -89,7 +124,7 @@
         }
     },
     "addons": [{
-        "id": "configure",
+        "id": "configureVolumesAndLinks",
         "onInstall": [{
                 "api": "env.control.AddContainerVolumeByGroup",
                 "nodeGroup": "cp",
