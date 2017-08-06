@@ -77,7 +77,7 @@
         "redeployApps": [{
             "cmd[${nodes.cp.first.id}]": [
                 "asadmin=$STACK_PATH/bin/asadmin",
-                "remote_host=\"--host ${nodes.das.first.address} --port 4848 --secure --user $ADMIN_USER --passwordfile $PSWD_FILE\"",
+                "remote_host=\"--host $DAS_HOST --port $DAS_PORT_4848_TCP_PORT --secure --user $ADMIN_USER --passwordfile $PSWD_FILE\"",
                 "echo 'Checking cluster status - 10 attempts'",
                 "for ((i = 1; i < 11; i++))",
                 "  do CLUSTER_STATUS=$( $asadmin $remote_host list-clusters | head -n 1 )",
@@ -90,7 +90,7 @@
                 "pwd",
                 "for c in *",
                 "  do for f in $c/*",
-                "    do echo 'Deploying $f to $c...'",
+                "    do echo \"Deploying $f to $c...\"",
                 "    [ \"x${c}\" == \"xROOT\" ] && deploy_context=\"--contextroot /\" || deploy_context=\"--contextroot ${c}\"",
                 "    cmd=\"$asadmin $remote_host deploy --availabilityenabled=true --asyncreplication=false --force=true --target cluster1 $deploy_context $f\"",
                 "    echo $cmd",
