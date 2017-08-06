@@ -67,7 +67,7 @@
                 "startService": false
             }
         }, {
-            "if (${this.redeploy})": "reployApps"
+            "if (${this.redeploy})": "redeployApps"
         }, {
             "installAddon": "configureVolumesAndLinks"
         }],
