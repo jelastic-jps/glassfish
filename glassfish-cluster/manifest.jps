@@ -59,6 +59,10 @@
                             "act": "A"
                         }
                     }
+                }, {
+                    "expose:28080->80": {
+                        "id": "${@i.id}"
+                    }
                 }]
             }, {
                 "api": "env.control.ExecDockerRunCmd",
@@ -83,6 +87,10 @@
                         "address": "${@n.address}",
                         "act": "D"
                     }
+                }, {
+                    "expose:28080->80": {
+                        "id": "${@i.id}"
+                    }
                 }]
             }
         }
@@ -102,8 +110,7 @@
         },
         "expose:28080->80": {
             "cmd[${this.id}]": [
-                "echo JELASTIC_EXPOSE=${globals.port} >> /.jelenv",
-                "iptables -t nat -L 2>> /var/log/run.log | grep -qE \"REDIRECT.*${globals.port}\" || iptables -t nat -I PREROUTING -p tcp -m tcp --dport 80 -j REDIRECT --to-ports ${globals.port} -m comment --comment \"GlassFish HTTP Autoredirect\" >> /var/log/run.log"
+                "echo JELASTIC_EXPOSE=${globals.port} >> /.jelenv"
             ],
             "user": "root"
         },
