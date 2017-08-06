@@ -52,14 +52,14 @@
                     "alias": "das",
                     "groupAlias": "das"
                 }, {
-                    "expose:28080->80": "${@i.id}"
+                    "expose:28080->80": {
+                        "id": "${@i.id}"
+                    }
                 }, {
-                    "if (${@i.ismaster})": {
-                        "cmd[${@i.id}]": [
-                            "iptables -t nat -A PREROUTING -p tcp -d ${@i.address} --dport 4848 -j DNAT --to-destination ${nodes.vds.first.address}",
-                            "iptables -t nat -A POSTROUTING -p tcp --dst ${nodes.vds.first.address} --dport 4848 -j SNAT --to-source ${@i.address}"
-                        ],
-                        "user": "root"
+                    "redirect": {
+                        "id": "${@i.id}",
+                        "address": "${@i.address}",
+                        "act": "A"
                     }
                 }]
             }, {
@@ -77,8 +77,20 @@
         }
     }],
     "onBeforeServiceScaleOut[cp]": {
-        "forEach(event.response.nodes)": {
-            "expose:28080->80": "${@i.id}"
+        "forEach(n:nodes.cp)": {
+            "if (${@n.ismaster})": {
+                "forEach(event.response.nodes)": [{
+                    "redirect": {
+                        "id": "${@i.id}",
+                        "address": "${@n.address}",
+                        "act": "D"
+                    }
+                }, {
+                    "expose:28080->80": {
+                        "id": "${@i.id}"
+                    }
+                }]
+            }
         }
     },
     "onBeforeScaleIn[cp]": {
@@ -87,8 +99,15 @@
         }
     },
     "actions": {
+        "redirect": {
+            "cmd[${this.id}]": [
+                "iptables -t nat -${this.act} PREROUTING -p tcp -d ${this.address} --dport 4848 -j DNAT --to-destination ${nodes.vds.first.address}",
+                "iptables -t nat -${this.act} POSTROUTING -p tcp --dst ${nodes.vds.first.address} --dport 4848 -j SNAT --to-source ${this.address}"
+            ],
+            "user": "root"
+        },
         "expose:28080->80": {
-            "cmd[${@i.id}]": [
+            "cmd[${this.id}]": [
                 "echo JELASTIC_EXPOSE=${globals.port} >> /.jelenv",
                 "iptables -t nat -L 2>> /var/log/run.log | grep -qE \"REDIRECT.*${globals.port}\" || iptables -t nat -I PREROUTING -p tcp -m tcp --dport 80 -j REDIRECT --to-ports ${globals.port} -m comment --comment \"GlassFish HTTP Autoredirect\" >> /var/log/run.log"
             ],
@@ -105,7 +124,6 @@
         }],
         "localhost:4848->das:4848": {
             "cmd": {
-                "nodeId": "${this.nodeId}",
                 "nodeGroup": "${this.nodeGroup}",
                 "commands": "sed -i \"s/http:\\/\\/localhost:4848/https:\\/\\/node${nodes.vds.first.id}-${env.domain}:4848/g\" ${STACK_PATH}/glassfish/domains/domain1/docroot/index.html"
             }
