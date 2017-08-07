@@ -10,6 +10,11 @@
         "port": "28080"
     },
     "onInstall": {
+        "if (nodes.cp.length == 1)": {
+            "localhost:4848->das:4848": {
+                "nodeGroup": "cp"
+            }
+        },
         "if (nodes.cp.length > 1)": {
             "buildCluster": {
                 "redeploy": "false"
@@ -133,7 +138,7 @@
                 "forEach(nodes.cp)": [{
                     "if (${@i.ismaster})": [{
                         "cmd[${@i.id}]": [
-                            "cp ~/pswd ${PSWD_FILE}.old"
+                            "mv ~/pswd ${PSWD_FILE}.old"
                         ]
                     }, {
                         "iptables": {
