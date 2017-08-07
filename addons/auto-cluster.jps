@@ -113,8 +113,7 @@
         "onInstall": [{
                 "forEach(nodes.cp)": {
                     "if (${@i.ismaster})": {
-                        "cat $PSWD_FILE",
-                        "cmd[${@i.id}]": "mv $PSWD_FILE ~/pswd"
+                        "cmd[${@i.id}]": "cp $PSWD_FILE ~/pswd"
                     }
                 }
             }, {
@@ -134,9 +133,7 @@
                 "forEach(nodes.cp)": [{
                     "if (${@i.ismaster})": [{
                         "cmd[${@i.id}]": [
-                            "cat $PSWD_FILE",
-                            "mv ~/pswd $PSWD_FILE",
-                            "cat $PSWD_FILE"
+                            "cp ~/pswd.old \"${PSWD_FILE}.old\""
                         ]
                     }, {
                         "iptables": {
@@ -165,10 +162,6 @@
                 "restartContainers": {
                     "nodeGroup": "cp"
                 }
-            }, {
-                "cmd[${nodes.das.first.id}]": [
-                    "cat $PSWD_FILE"
-                ]
             },
             "updateLink2Das"
         ],
