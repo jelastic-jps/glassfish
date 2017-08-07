@@ -111,6 +111,12 @@
     "addons": [{
         "id": "configureVolumesAndLinks",
         "onInstall": [{
+                "forEach(nodes.cp)": {
+                    "if (${@i.ismaster})": {
+                        "cmd[${@i.id}]": "mv $PSWD_FILE ~/pswd"
+                    }
+                }
+            }, {
                 "api": "env.control.AddContainerVolumeByGroup",
                 "nodeGroup": "cp",
                 "path": "${globals.mountPath}"
@@ -125,19 +131,21 @@
                 "readOnly": false
             }, {
                 "forEach(nodes.cp)": [{
-                    "api": "env.control.LinkDockerNodes",
-                    "sourceNodeId": "${nodes.das.first.id}",
-                    "targetNodeId": "${@i.id}",
-                    "alias": "das",
-                    "groupAlias": "das"
-                }, {
-                    "if (${@i.ismaster})": {
+                    "if (${@i.ismaster})": [{
+                        "cmd[${@i.id}]": "mv ~/pswd $PSWD_FILE"
+                    }, {
                         "iptables": {
                             "id": "${@i.id}",
                             "address": "${@i.address}",
                             "act": "A"
                         }
-                    }
+                    }]
+                }, {
+                    "api": "env.control.LinkDockerNodes",
+                    "sourceNodeId": "${nodes.das.first.id}",
+                    "targetNodeId": "${@i.id}",
+                    "alias": "das",
+                    "groupAlias": "das"
                 }, {
                     "expose:28080->80": {
                         "id": "${@i.id}"
@@ -154,9 +162,6 @@
                 }
             },
             "updateLink2Das"
-        ],
-        "success": {
-            "email": "<table style='font-size:14px'><tr><td>Admin Console:</td><td><a href='${nodes.das.first.adminUrl}' target='_blank'>${nodes.das.first.adminUrl}</a></td></tr><tr><td>Login:</td><td><b>admin</b></td></tr><tr><td>Password:</td><td><b>glassfish</b></td></tr></table>"
-        }
+        ]
     }]
 }
