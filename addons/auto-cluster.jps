@@ -113,7 +113,7 @@
         "onInstall": [{
                 "forEach(nodes.cp)": {
                     "if (${@i.ismaster})": {
-                        "cmd[${@i.id}]": "cp $PSWD_FILE ~/pswd.old"
+                        "cmd[${@i.id}]": "cp $PSWD_FILE ~/pswd"
                     }
                 }
             }, {
@@ -133,7 +133,7 @@
                 "forEach(nodes.cp)": [{
                     "if (${@i.ismaster})": [{
                         "cmd[${@i.id}]": [
-                            "cp ~/pswd.old ${PSWD_FILE}.old"
+                            "cp ~/pswd ${PSWD_FILE}.old"
                         ]
                     }, {
                         "iptables": {
