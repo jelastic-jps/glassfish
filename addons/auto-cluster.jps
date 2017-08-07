@@ -12,7 +12,8 @@
     "onInstall": {
         "if (nodes.cp.length == 1)": {
             "localhost:4848->das:4848": {
-                "nodeGroup": "cp"
+                "nodeGroup": "cp",
+                "dasNodeId": "${nodes.cp.first.id}"
             }
         },
         "if (nodes.cp.length > 1)": {
@@ -99,17 +100,19 @@
         },
         "updateLink2Das": [{
             "localhost:4848->das:4848": {
-                "nodeGroup": "cp"
+                "nodeGroup": "cp",
+                "id": "${nodes.das.first.id}"
             }
         }, {
             "localhost:4848->das:4848": {
-                "nodeGroup": "das"
+                "nodeGroup": "das",
+                "dasNodeId": "${nodes.das.first.id}"
             }
         }],
         "localhost:4848->das:4848": {
             "cmd": {
                 "nodeGroup": "${this.nodeGroup}",
-                "commands": "sed -i \"s/http:\\/\\/localhost:4848/https:\\/\\/node${nodes.das.first.id}-${env.domain}:4848/g\" ${STACK_PATH}/glassfish/domains/domain1/docroot/index.html"
+                "commands": "sed -i \"s/http:\\/\\/localhost:4848/https:\\/\\/node${this.dasNodeId}-${env.domain}:4848/g\" ${STACK_PATH}/glassfish/domains/domain1/docroot/index.html"
             }
         }
     },
