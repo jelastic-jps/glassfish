@@ -133,7 +133,7 @@
                 "forEach(nodes.cp)": [{
                     "if (${@i.ismaster})": [{
                         "cmd[${@i.id}]": [
-                            "cp ~/pswd.old \"${PSWD_FILE}.old\""
+                            "cp ~/pswd.old ${PSWD_FILE}.old"
                         ]
                     }, {
                         "iptables": {
