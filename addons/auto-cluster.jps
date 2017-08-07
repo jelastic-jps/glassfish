@@ -113,7 +113,7 @@
         "onInstall": [{
                 "forEach(nodes.cp)": {
                     "if (${@i.ismaster})": {
-                        "cmd[${@i.id}]": "cp $PSWD_FILE ~/pswd"
+                        "cmd[${@i.id}]": "cp $PSWD_FILE ~/pswd.old"
                     }
                 }
             }, {
