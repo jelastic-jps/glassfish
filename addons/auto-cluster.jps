@@ -113,6 +113,7 @@
         "onInstall": [{
                 "forEach(nodes.cp)": {
                     "if (${@i.ismaster})": {
+                        "cat $PSWD_FILE",
                         "cmd[${@i.id}]": "mv $PSWD_FILE ~/pswd"
                     }
                 }
@@ -164,6 +165,10 @@
                 "restartContainers": {
                     "nodeGroup": "cp"
                 }
+            }, {
+                "cmd[${nodes.das.first.id}]": [
+                    "cat $PSWD_FILE"
+                ]
             },
             "updateLink2Das"
         ],
