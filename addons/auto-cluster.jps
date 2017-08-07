@@ -101,7 +101,7 @@
         "updateLink2Das": [{
             "localhost:4848->das:4848": {
                 "nodeGroup": "cp",
-                "id": "${nodes.das.first.id}"
+                "dasNodeId": "${nodes.das.first.id}"
             }
         }, {
             "localhost:4848->das:4848": {
