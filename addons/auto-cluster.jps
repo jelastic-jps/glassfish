@@ -132,7 +132,11 @@
             }, {
                 "forEach(nodes.cp)": [{
                     "if (${@i.ismaster})": [{
-                        "cmd[${@i.id}]": "mv ~/pswd $PSWD_FILE"
+                        "cmd[${@i.id}]": [
+                            "cat $PSWD_FILE",
+                            "mv ~/pswd $PSWD_FILE",
+                            "cat $PSWD_FILE"
+                        ]
                     }, {
                         "iptables": {
                             "id": "${@i.id}",
@@ -162,6 +166,9 @@
                 }
             },
             "updateLink2Das"
-        ]
+        ],
+        "success": {
+            "text": "done"
+        }
     }]
 }
