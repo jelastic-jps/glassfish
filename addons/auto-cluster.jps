@@ -52,6 +52,11 @@
             "cmd[${@i.id}]": "$HOME_DIR/service.sh delete"
         }
     },
+    "onAfterClone": {
+        "if (nodes.das)": {
+            "script": "https://raw.githubusercontent.com/jelastic-jps/glassfish/master/addons/scripts/on-after-clone.js"
+        }
+    },
     "actions": {
         "buildCluster": [{
             "addNodes": {
