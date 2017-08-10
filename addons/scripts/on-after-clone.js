@@ -6,11 +6,6 @@ var oldEnvName = "${env.envName}",
     dasId, dasIP, cpMasterId, cpMasterIP, 
     oldEnvCpMasterIP, allResp = [];
 
-oldEnvName = "55-gf-test";
-envName = "55-gf-test-clone2";
-oldDasId = 126227;
-oldDasIP = "192.168.5.119";
-
 var resp = jelastic.env.control.GetEnvInfo(envName, session);
 if (resp.result != 0) return resp; else allResp.push(resp);
 
