@@ -24,21 +24,11 @@
     },
     "onBeforeServiceScaleOut[cp]": [{
         "if (nodes.das)": {
-            "forEach(n:nodes.cp)": {
-                "if (${@n.ismaster})": {
-                    "forEach(event.response.nodes)": [{
-                        "iptables": {
-                            "id": "${@i.id}",
-                            "address": "${@n.address}",
-                            "act": "D"
-                        }
-                    }, {
-                        "expose:28080->80": {
-                            "id": "${@i.id}"
-                        }
-                    }]
+            "forEach(event.response.nodes)": [{
+                "expose:28080->80": {
+                    "id": "${@i.id}"
                 }
-            }
+            }]
         }
     }, {
         "if (!nodes.das)": {
@@ -90,13 +80,6 @@
                 "$HOME_DIR/service.sh redeploy"
             ]
         },
-        "iptables": {
-            "cmd[${this.id}]": [
-                "iptables -t nat -${this.act} PREROUTING -p tcp -d ${this.address} --dport 4848 -j DNAT --to-destination ${nodes.das.first.address}",
-                "iptables -t nat -${this.act} POSTROUTING -p tcp --dst ${nodes.das.first.address} --dport 4848 -j SNAT --to-source ${this.address}"
-            ],
-            "user": "root"
-        },
         "expose:28080->80": {
             "cmd[${this.id}]": [
                 "echo JELASTIC_EXPOSE=${globals.port} >> /.jelenv"
@@ -146,14 +129,18 @@
                 "forEach(nodes.cp)": [{
                     "if (${@i.ismaster})": [{
                         "cmd[${@i.id}]": [
-                            "mv ~/pswd ${PSWD_FILE}.old"
+                            "mv ~/pswd ${PSWD_FILE}.old",
+                            "d=com/sun/enterprise/v3/admin/adapter",
+                            "mkdir -p $d",
+                            "echo '<html><head><meta http-equiv=\"refresh\" content=\"0;url=https://node${nodes.das.first.id}-${env.domain}:4848/\" /></head></html>' > $d/statusNotDAS.html",
+                            "jar uf ../glassfish/modules/kernel.jar $d/statusNotDAS.html",
+                            "rm -rf com"
                         ]
                     }, {
-                        "iptables": {
-                            "id": "${@i.id}",
-                            "address": "${@i.address}",
-                            "act": "A"
-                        }
+                        "cmd[${@i.id}]": [
+                            "iptables -t nat -I PREROUTING -p tcp -m tcp --dport 4848 -j REDIRECT --to-ports 24848"
+                        ],
+                        "user": "root"
                     }]
                 }, {
                     "api": "env.control.LinkDockerNodes",
@@ -161,6 +148,14 @@
                     "targetNodeId": "${@i.id}",
                     "alias": "das",
                     "groupAlias": "das"
+                }, {
+                    "api": "env.control.LinkDockerNodes",
+                    "sourceNodeId": "${@i.id}",
+                    "targetNodeId": "${nodes.das.first.id}",
+                    "alias": "worker",
+                    "groupAlias": "worker"
+                }, {
+                    "script": "return jelastic.env.control.SetNodeDisplayName(${@i.id}, 'Worker ' + (${@} + 1))"
                 }, {
                     "expose:28080->80": {
                         "id": "${@i.id}"
