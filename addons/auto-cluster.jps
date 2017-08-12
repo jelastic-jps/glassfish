@@ -133,7 +133,7 @@
                             "d=com/sun/enterprise/v3/admin/adapter",
                             "mkdir -p $d",
                             "echo '<html><head><meta http-equiv=\"refresh\" content=\"0;url=https://node${nodes.das.first.id}-${env.domain}:4848/\" /></head></html>' > $d/statusNotDAS.html",
-                            "jar uf ../glassfish/modules/kernel.jar $d/statusNotDAS.html",
+                            "jar uf $STACK_PATH/glassfish/modules/kernel.jar $d/statusNotDAS.html",
                             "rm -rf com"
                         ]
                     }, {
