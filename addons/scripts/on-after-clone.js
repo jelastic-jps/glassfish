@@ -15,11 +15,20 @@ for (var i = 0, n = resp.nodes, l = n.length; i < l; i++) {
     }
 }
 
-//updating links in index.html
+/**
+* updating links in index.html from old DAS to new DAS
+*/
 var cmd = "sed -i \"s/node" + oldDasId + "-" + oldEnvName + "/node" + dasId + "-" + envName + "/g\" ${STACK_PATH}/glassfish/domains/domain1/docroot/index.html";
 resp = cmdByGroup(cmd, "cp");
 if (resp.result != 0) return resp; else allResp.push(resp);
 
+resp = cmdByGroup(cmd, "das");
+if (resp.result != 0) return resp; else allResp.push(resp);
+
+/**
+* updating JMS host from old DAS to new DAS
+*/
+cmd = "sed -i \"s/node" + oldDasId + "/node" + dasId + "/g\" ${STACK_PATH}/glassfish/domains/domain1/config/domain.xml";
 resp = cmdByGroup(cmd, "das");
 if (resp.result != 0) return resp; else allResp.push(resp);
 
