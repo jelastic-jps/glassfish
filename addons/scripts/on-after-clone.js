@@ -16,7 +16,7 @@ for (var i = 0, n = resp.nodes, l = n.length; i < l; i++) {
 }
 
 /**
-* updating links in index.html from old DAS to new DAS
+* updating links in index.html
 */
 var cmd = "sed -i \"s/node" + oldDasId + "-" + oldEnvName + "/node" + dasId + "-" + envName + "/g\" ${STACK_PATH}/glassfish/domains/domain1/docroot/index.html";
 resp = cmdByGroup(cmd, "cp");
@@ -26,17 +26,18 @@ resp = cmdByGroup(cmd, "das");
 if (resp.result != 0) return resp; else allResp.push(resp);
 
 /**
-* updating JMS host from old DAS to new DAS
+* updating JMS host
 */
 cmd = "sed -i \"s/node" + oldDasId + "/node" + dasId + "/g\" ${STACK_PATH}/glassfish/domains/domain1/config/domain.xml";
 resp = cmdByGroup(cmd, "das");
 if (resp.result != 0) return resp; else allResp.push(resp);
 
 /**
-* clean old nodes in DAS
+* restart DAS node
 */
-resp = cmdByGroup("$STACK_PATH/service.sh clean", "das");
+resp = jelastic.env.control.RestartNodes(envName, session, "das", -1, -1);
 if (resp.result != 0) return resp; else allResp.push(resp);
+
 
 /**
 * update redirect from "cp" master to DAS
@@ -48,6 +49,12 @@ cmd = ["d=com/sun/enterprise/v3/admin/adapter",
 "rm -rf com"].join("; ");
 
 resp = cmdByGroup(cmd, "cp");
+if (resp.result != 0) return resp; else allResp.push(resp);
+
+/**
+* clean all old nodes in DAS
+*/
+resp = cmdByGroup("$STACK_PATH/service.sh clean", "das");
 if (resp.result != 0) return resp; else allResp.push(resp);
 
 
