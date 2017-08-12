@@ -2,7 +2,7 @@
 var oldEnvName = "${env.envName}",
     oldDasId = "${nodes.das.first.id}",
     envName = "${event.response.env.envName}",
-    dasId, cpMasterId, allResp = [];
+    dasId, allResp = [];
     
 
 var resp = jelastic.env.control.GetEnvInfo(envName, session);
@@ -12,9 +12,6 @@ if (resp.result != 0) return resp; else allResp.push(resp);
 for (var i = 0, n = resp.nodes, l = n.length; i < l; i++) {
     if (n[i].nodeGroup == 'das' && n[i].ismaster) {
         dasId = n[i].id;
-    }
-    if (n[i].nodeGroup == 'cp' && n[i].ismaster) {
-        cpMasterId = n[i].id;
     }
 }
 
@@ -41,7 +38,7 @@ cmd = ["d=com/sun/enterprise/v3/admin/adapter",
 "jar uf $STACK_PATH/glassfish/modules/kernel.jar $d/statusNotDAS.html",
 "rm -rf com"].join("; ");
 
-resp = cmdById(cmd, cpMasterId);
+resp = cmdByGroup(cmd, "cp");
 if (resp.result != 0) return resp; else allResp.push(resp);
 
 
@@ -55,13 +52,6 @@ return {
     result: 0,
     responses: allResp
 };
-
-
-function cmdById(cmd, nodeId) {
-    return jelastic.env.control.ExecCmdById(envName, session, nodeId, toJSON([{
-        "command": cmd
-    }]), true, "jelastic");
-}
 
 function cmdByGroup(cmd, group) {
     return jelastic.env.control.ExecCmdByGroup(envName, session, group, toJSON([{
