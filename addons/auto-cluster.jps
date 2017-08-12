@@ -6,6 +6,7 @@
     "logo": "https://github.com/jelastic-jps/glassfish/raw/master/glassfish-cluster/img/glassfish-logo.png",
     "description": "Transforms standalone nodes to cluster",
     "globals": {
+        "path": "/home/.ssh",
         "port": "28080"
     },
     "onInstall": {
@@ -38,7 +39,7 @@
     }],
     "onBeforeScaleIn[cp]": {
         "forEach(event.response.nodes)": {
-            "cmd[${@i.id}]": "$HOME_DIR/service.sh delete"
+            "cmd[${@i.id}]": "$STACK_PATH/service.sh delete"
         }
     },
     "onAfterClone": {
@@ -62,7 +63,7 @@
                     "DAS": "true"
                 },
                 "dockerVolumes": [
-                    "/opt/${nodes.cp.first.nodeType}/home/.ssh"
+                    "${globals.path}"
                 ],
                 "startService": false
             }
@@ -76,7 +77,7 @@
         }],
         "redeployApps": {
             "cmd[${nodes.cp.first.id}]": [
-                "$HOME_DIR/service.sh redeploy"
+                "$STACK_PATH/service.sh redeploy"
             ]
         },
         "expose:28080->80": {
@@ -114,13 +115,13 @@
             }, {
                 "api": "env.control.AddContainerVolumeByGroup",
                 "nodeGroup": "cp",
-                "path": "/opt/${nodes.cp.first.nodeType}/home/.ssh"
+                "path": "${globals.path}"
             }, {
                 "api": "env.file.AddMountPointByGroup",
                 "nodeGroup": "cp",
-                "path": "/opt/${nodes.cp.first.nodeType}/home/.ssh",
+                "path": "${globals.path}",
                 "protocol": "nfs",
-                "sourcePath": "/opt/${nodes.cp.first.nodeType}/home/.ssh",
+                "sourcePath": "${globals.path}",
                 "sourceNodeId": "${nodes.das.first.id}",
                 "name": "SSH Keys",
                 "readOnly": false
