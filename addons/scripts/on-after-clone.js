@@ -3,6 +3,7 @@ var oldEnvName = "${env.envName}",
     oldDasId = "${nodes.das.first.id}",
     envName = "${event.response.env.envName}",
     dasId, cpMasterId, allResp = [];
+    
 
 var resp = jelastic.env.control.GetEnvInfo(envName, session);
 if (resp.result != 0) return resp; else allResp.push(resp);
@@ -34,11 +35,11 @@ if (resp.result != 0) return resp; else allResp.push(resp);
 /**
 * update redirect from "cp" master to DAS
 */
-cmd = "d=com/sun/enterprise/v3/admin/adapter; \
-mkdir -p $d; \
-echo '<html><head><meta http-equiv=\"refresh\" content=\"0;url=https://node" + dasId + "-" + envName + ":4848/\" /></head></html>' > $d/statusNotDAS.html; \
-jar uf ../glassfish/modules/kernel.jar $d/statusNotDAS.html; \
-rm -rf com";
+cmd = ["d=com/sun/enterprise/v3/admin/adapter",
+"mkdir -p $d",
+"echo '<html><head><meta http-equiv=\"refresh\" content=\"0;url=https://node" + dasId + "-" + envName + ":4848/\" /></head></html>' > $d/statusNotDAS.html",
+"jar uf ~/../glassfish/modules/kernel.jar $d/statusNotDAS.html",
+"rm -rf com"].join("; ");
 
 resp = cmdById(cmd, cpMasterId);
 if (resp.result != 0) return resp; else allResp.push(resp);
@@ -59,11 +60,11 @@ return {
 function cmdById(cmd, nodeId) {
     return jelastic.env.control.ExecCmdById(envName, session, nodeId, toJSON([{
         "command": cmd
-    }]), true, "root");
+    }]), true, "jelastic");
 }
 
 function cmdByGroup(cmd, group) {
     return jelastic.env.control.ExecCmdByGroup(envName, session, group, toJSON([{
         "command": cmd
-    }]), true, false, "root");
+    }]), true, false, "jelastic");
 }
