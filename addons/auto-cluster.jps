@@ -149,14 +149,6 @@
                     "alias": "das",
                     "groupAlias": "das"
                 }, {
-                    "api": "env.control.LinkDockerNodes",
-                    "sourceNodeId": "${@i.id}",
-                    "targetNodeId": "${nodes.das.first.id}",
-                    "alias": "worker",
-                    "groupAlias": "worker"
-                }, {
-                    "script": "return jelastic.env.control.SetNodeDisplayName(${@i.id}, 'Worker ' + (${@} + 1))"
-                }, {
                     "expose:28080->80": {
                         "id": "${@i.id}"
                     }
