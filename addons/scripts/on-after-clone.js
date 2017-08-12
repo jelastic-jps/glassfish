@@ -29,7 +29,7 @@ if (resp.result != 0) return resp; else allResp.push(resp);
 /**
 * clean old nodes in DAS
 */
-resp = cmdByGroup("$HOME_DIR/service.sh clean", "das");
+resp = cmdByGroup("$STACK_PATH/service.sh clean", "das");
 if (resp.result != 0) return resp; else allResp.push(resp);
 
 /**
@@ -38,7 +38,7 @@ if (resp.result != 0) return resp; else allResp.push(resp);
 cmd = ["d=com/sun/enterprise/v3/admin/adapter",
 "mkdir -p $d",
 "echo '<html><head><meta http-equiv=\"refresh\" content=\"0;url=https://node" + dasId + "-" + envName + ":4848/\" /></head></html>' > $d/statusNotDAS.html",
-"jar uf ~/../glassfish/modules/kernel.jar $d/statusNotDAS.html",
+"jar uf $STACK_PATH/glassfish/modules/kernel.jar $d/statusNotDAS.html",
 "rm -rf com"].join("; ");
 
 resp = cmdById(cmd, cpMasterId);
