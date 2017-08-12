@@ -126,9 +126,12 @@
                 "name": "SSH Keys",
                 "readOnly": false
             }, {
+                "cmd[${nodes.cp.first.id}]": [
+                    "mv ~/pswd ${PSWD_FILE}.old"
+                ]
+            }, {
                 "forEach(nodes.cp)": [{
                     "cmd[${@i.id}]": [
-                        "mv ~/pswd ${PSWD_FILE}.old",
                         "d=com/sun/enterprise/v3/admin/adapter",
                         "mkdir -p $d",
                         "echo '<html><head><meta http-equiv=\"refresh\" content=\"0;url=https://node${nodes.das.first.id}-${env.domain}:4848/\" /></head></html>' > $d/statusNotDAS.html",
