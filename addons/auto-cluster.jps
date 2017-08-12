@@ -127,21 +127,19 @@
                 "readOnly": false
             }, {
                 "forEach(nodes.cp)": [{
-                    "if (${@i.ismaster})": [{
-                        "cmd[${@i.id}]": [
-                            "mv ~/pswd ${PSWD_FILE}.old",
-                            "d=com/sun/enterprise/v3/admin/adapter",
-                            "mkdir -p $d",
-                            "echo '<html><head><meta http-equiv=\"refresh\" content=\"0;url=https://node${nodes.das.first.id}-${env.domain}:4848/\" /></head></html>' > $d/statusNotDAS.html",
-                            "jar uf $STACK_PATH/glassfish/modules/kernel.jar $d/statusNotDAS.html",
-                            "rm -rf com"
-                        ]
-                    }, {
-                        "cmd[${@i.id}]": [
-                            "iptables -t nat -I PREROUTING -p tcp -m tcp --dport 4848 -j REDIRECT --to-ports 24848"
-                        ],
-                        "user": "root"
-                    }]
+                    "cmd[${@i.id}]": [
+                        "mv ~/pswd ${PSWD_FILE}.old",
+                        "d=com/sun/enterprise/v3/admin/adapter",
+                        "mkdir -p $d",
+                        "echo '<html><head><meta http-equiv=\"refresh\" content=\"0;url=https://node${nodes.das.first.id}-${env.domain}:4848/\" /></head></html>' > $d/statusNotDAS.html",
+                        "jar uf $STACK_PATH/glassfish/modules/kernel.jar $d/statusNotDAS.html",
+                        "rm -rf com"
+                    ]
+                }, {
+                    "cmd[${@i.id}]": [
+                        "iptables -t nat -I PREROUTING -p tcp -m tcp --dport 4848 -j REDIRECT --to-ports 24848"
+                    ],
+                    "user": "root"
                 }, {
                     "api": "env.control.LinkDockerNodes",
                     "sourceNodeId": "${nodes.das.first.id}",
