@@ -18,7 +18,6 @@ for (var i = 0, n = resp.nodes, l = n.length; i < l; i++) {
 /**
 * updating JMS host
 *
-
 cmd = "sed -i \"s/node" + oldDasId + "/node" + dasId + "/g\" ${STACK_PATH}/glassfish/domains/domain1/config/domain.xml";
 resp = cmdByGroup(cmd, "das");
 if (resp.result != 0) return resp; else allResp.push(resp);
