@@ -33,7 +33,11 @@
                     "nodeGroup": "cp",
                     "dasNodeId": "${@i.id}"
                 }
-            }, "restartNodes[${@i.id}]"]
+            }, {
+                "restartContainers": {
+                    "nodeId": "${@i.id}"
+                }
+            }]
         }
     }, {
         "if (!nodes.das)": {
