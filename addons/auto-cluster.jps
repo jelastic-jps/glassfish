@@ -28,6 +28,11 @@
                 "expose:28080->80": {
                     "id": "${@i.id}"
                 }
+            }, {
+                "localhost:4848->das:4848": {
+                    "nodeGroup": "cp",
+                    "dasNodeId": "${@i.id}"
+                }
             }]
         }
     }, {
