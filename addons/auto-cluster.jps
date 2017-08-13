@@ -51,6 +51,8 @@
             "cmd[${@i.id}]": "$STACK_PATH/service.sh delete"
         }
     },
+    "onAfterScaleOut[cp]": "restartRequired",
+    "onAfterScaleIn[cp]": "restartRequired",
     "onAfterClone": {
         "if (nodes.das)": {
             "script": "https://raw.githubusercontent.com/jelastic-jps/glassfish/master/addons/scripts/on-after-clone.js?_r=${fn.random}"
@@ -84,6 +86,9 @@
                 }
             }
         }],
+        "restartRequired": {
+            "cmd[das]": "$STACK_PATH/service.sh restartRequired"
+        },
         "redeployApps": {
             "cmd[${nodes.cp.first.id}]": [
                 "$STACK_PATH/service.sh redeploy"
