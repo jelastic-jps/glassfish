@@ -17,16 +17,18 @@ for (var i = 0, n = resp.nodes, l = n.length; i < l; i++) {
 
 /**
 * updating JMS host
-*/
+*
+
 cmd = "sed -i \"s/node" + oldDasId + "/node" + dasId + "/g\" ${STACK_PATH}/glassfish/domains/domain1/config/domain.xml";
 resp = cmdByGroup(cmd, "das");
 if (resp.result != 0) return resp; else allResp.push(resp);
 
 /**
 * restart DAS node
-*/
+* 
 resp = jelastic.env.control.RestartNodes(envName, session, "das", -1, -1);
 if (resp.result != 0) return resp; else allResp.push(resp);
+**/
 
 /**
 * updating links in index.html
@@ -56,6 +58,7 @@ if (resp.result != 0) return resp; else allResp.push(resp);
 */
 resp = cmdByGroup("$STACK_PATH/service.sh clean", "das");
 if (resp.result != 0) return resp; else allResp.push(resp);
+
 
 /**
 * restart new nodes and register them in DAS
