@@ -33,7 +33,7 @@
                     "nodeGroup": "cp",
                     "dasNodeId": "${@i.id}"
                 }
-            }]
+            }, "restartNodes[${@i.id}]"]
         }
     }, {
         "if (!nodes.das)": {
