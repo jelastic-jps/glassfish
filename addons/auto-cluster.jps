@@ -13,9 +13,9 @@
     "onInstall": {
         "if (nodes.das)": [
             "cleanCluster",
+            "updateLinkInNotDas",
             "restartContainers[cp]",
             "updateLinkInIndex",
-            "updateLinkInNotDas",
             "restartRequired"
         ],
         "if (!nodes.das)": {
@@ -189,9 +189,9 @@
             }, {
                 "if (${settings.redeploy})": "redeployApps"
             },
+            "updateLinkInNotDas",
             "restartContainers[cp]",
             "updateLinkInIndex",
-            "updateLinkInNotDas",
             "restartRequired"
         ]
     }]
