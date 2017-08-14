@@ -126,10 +126,10 @@
         "localhost:4848->das:4848": {
             "cmd": {
                 "nodeGroup": "${this.nodeGroup}",
-                "commands": "sed -i -e \"s/http.*:\/\/.*:4848/https:\\/\\/node${this.dasNodeId}-${env.domain}:4848/g\" ${STACK_PATH}/glassfish/domains/domain1/docroot/index.html"
+                "commands": "sed -i -e \"s/http.*:\\/\\/.*:4848/https:\\/\\/node${this.dasNodeId}-${env.domain}:4848/g\" ${STACK_PATH}/glassfish/domains/domain1/docroot/index.html"
             }
         },
-        "updateNotDasLinks": {
+        "updateLinkInNotDas": {
             "cmd[cp]": [
                 "d=com/sun/enterprise/v3/admin/adapter",
                 "mkdir -p $d",
