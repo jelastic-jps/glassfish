@@ -14,7 +14,8 @@
             "cleanCluster",
             "restartContainers[cp]",
             "updateLinkInIndex",
-            "updateLinkInNotDas"
+            "updateLinkInNotDas",
+            "restartRequired"
         ],
         "if (!nodes.das)": {
             "if (nodes.cp.length == 1)": {
@@ -189,7 +190,8 @@
             },
             "restartContainers[cp]",
             "updateLinkInIndex",
-            "updateLinkInNotDas"
+            "updateLinkInNotDas",
+            "restartRequired"
         ]
     }]
 }
