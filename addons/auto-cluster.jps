@@ -7,7 +7,7 @@
     "description": "Transforms standalone nodes to cluster",
     "baseUrl": "https://raw.githubusercontent.com/jelastic-jps/glassfish/master/addons",
     "globals": {
-        "path": "/home/.ssh",
+        "path": "/home/jelastic/.ssh",
         "port": "28080"
     },
     "onInstall": {
