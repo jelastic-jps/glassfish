@@ -13,7 +13,7 @@
     "onInstall": {
         "if (nodes.das)": [
             "cleanCluster", {
-                "if (nodes.cp.customitem.dockerName.indexOf('payara') > -1)": "addAllHosts2Hazelcast"
+                "if (nodes.cp.first.customitem.dockerName.indexOf('payara') > -1)": "addAllHosts2Hazelcast"
             },
             "updateLinkInNotDas",
             "restartContainers[cp]",
@@ -37,7 +37,7 @@
     "onBeforeServiceScaleOut[cp]": [{
         "if (nodes.das)": {
             "forEach(event.response.nodes)": [{
-                    "if (nodes.cp.customitem.dockerName.indexOf('payara') > -1)": {
+                    "if (nodes.cp.first.customitem.dockerName.indexOf('payara') > -1)": {
                         "addHost2Hazelcast": {
                             "id": "${@i.id}"
                         }
@@ -64,7 +64,7 @@
     }],
     "onBeforeScaleIn[cp]": {
         "forEach(event.response.nodes)": [{
-            "if (nodes.cp.customitem.dockerName.indexOf('payara') > -1)": {
+            "if (nodes.cp.first.customitem.dockerName.indexOf('payara') > -1)": {
                 "removeHostFromHazelcast": {
                     "id": "${@i.id}"
                 }
@@ -215,7 +215,7 @@
                     }
                 }]
             }, {
-                "if (nodes.cp.customitem.dockerName.indexOf('payara') > -1)": "addAllHosts2Hazelcast"
+                "if (nodes.cp.first.customitem.dockerName.indexOf('payara') > -1)": "addAllHosts2Hazelcast"
             }, {
                 "api": "env.control.ExecDockerRunCmd",
                 "nodeId": "${nodes.das.first.id}"
