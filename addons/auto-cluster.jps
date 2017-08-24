@@ -12,7 +12,9 @@
     },
     "onInstall": {
         "if (nodes.das)": [
-            "cleanCluster",
+            "cleanCluster", {
+                "if (nodes.cp.customitem.dockerName.indexOf('payara') > -1)": "addAllHosts2Hazelcast"
+            },
             "updateLinkInNotDas",
             "restartContainers[cp]",
             "updateLinkInIndex",
@@ -35,6 +37,12 @@
     "onBeforeServiceScaleOut[cp]": [{
         "if (nodes.das)": {
             "forEach(event.response.nodes)": [{
+                    "if (nodes.cp.customitem.dockerName.indexOf('payara') > -1)": {
+                        "addHost2Hazelcast": {
+                            "id": "${@i.id}"
+                        }
+                    }
+                }, {
                     "expose:28080->80": {
                         "id": "${@i.id}"
                     }
@@ -55,9 +63,15 @@
         }
     }],
     "onBeforeScaleIn[cp]": {
-        "forEach(event.response.nodes)": {
+        "forEach(event.response.nodes)": [{
+            "if (nodes.cp.customitem.dockerName.indexOf('payara') > -1)": {
+                "removeHostFromHazelcast": {
+                    "id": "${@i.id}"
+                }
+            }
+        }, {
             "cmd[${@i.id}]": "$STACK_PATH/service.sh delete"
-        }
+        }]
     },
     "onAfterScaleOut[cp]": "restartRequired",
     "onAfterScaleIn[cp]": "restartRequired",
@@ -113,6 +127,23 @@
                 "echo JELASTIC_EXPOSE=${globals.port} >> /.jelenv"
             ],
             "user": "root"
+        },
+        "addAllHosts2Hazelcast": {
+            "forEach(nodes.cp)": {
+                "addHost2Hazelcast": {
+                    "id": "${@i.id}"
+                }
+            }
+        },
+        "addHost2Hazelcast": {
+            "cmd[${nodes.das.first.id}]": [
+                "$STACK_PATH/service.sh addHost node${this.id}"
+            ]
+        },
+        "removeHostFromHazelcast": {
+            "cmd[${nodes.das.first.id}]": [
+                "$STACK_PATH/service.sh removeHost node${this.id}"
+            ]
         },
         "updateLinkInIndex": [{
             "localhost:4848->das:4848": {
@@ -183,6 +214,8 @@
                         "id": "${@i.id}"
                     }
                 }]
+            }, {
+                "if (nodes.cp.customitem.dockerName.indexOf('payara') > -1)": "addAllHosts2Hazelcast"
             }, {
                 "api": "env.control.ExecDockerRunCmd",
                 "nodeId": "${nodes.das.first.id}"
