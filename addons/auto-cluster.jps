@@ -6,7 +6,7 @@
   "logo": "https://github.com/jelastic-jps/glassfish/raw/master/glassfish-cluster/img/glassfish-logo.png",
   "description": "Transforms standalone nodes to cluster",
   "baseUrl": "https://raw.githubusercontent.com/jelastic-jps/glassfish/master/addons",
-  "settings": {
+  "globals": {
     "path": "/home/jelastic/.ssh",
     "port": "28080"
   },
@@ -93,52 +93,6 @@
       }
     }
   },
-  "procedures": [
-    {
-      "id": "expose:28080->80",
-      "onCall": {
-        "cmd[${this.id}]": [
-          "echo JELASTIC_EXPOSE=${settings.port} >> /.jelenv"
-        ],
-        "user": "root"
-      }
-    },
-    {
-      "id": "updateLinkInNotDas",
-      "onCall": {
-        "cmd[cp]": [
-          "d=com/sun/enterprise/v3/admin/adapter",
-          "mkdir -p $d",
-          "echo '<html><head><meta http-equiv=\"refresh\" content=\"0;url=https://node${nodes.das.first.id}-${env.domain}:4848/\" /></head></html>' > $d/statusNotDAS.html",
-          "jar uf $STACK_PATH/glassfish/modules/kernel.jar $d/statusNotDAS.html",
-          "rm -rf com"
-        ]
-      }
-    },
-    {
-      "id": "updateLinkInIndex",
-      "onCall": [
-        {
-          "localhost:4848->das:4848": {
-            "nodeGroup": "cp",
-            "dasNodeId": "${nodes.das.first.id}"
-          }
-        },
-        {
-          "localhost:4848->das:4848": {
-            "nodeGroup": "das",
-            "dasNodeId": "${nodes.das.first.id}"
-          }
-        }
-      ]
-    },
-    {
-      "id": "restartRequired",
-      "onCall": {
-        "cmd[das]": "$STACK_PATH/service.sh restartRequired"
-      }
-    }
-  ],
   "actions": {
     "cleanCluster": {
       "cmd[das]": "$STACK_PATH/service.sh clean"
@@ -159,7 +113,7 @@
             "DAS": "true"
           },
           "dockerVolumes": [
-            "${settings.path}"
+            "${globals.path}"
           ],
           "startService": false
         }
@@ -173,10 +127,19 @@
         }
       }
     ],
+    "restartRequired": {
+      "cmd[das]": "$STACK_PATH/service.sh restartRequired"
+    },
     "redeployApps": {
       "cmd[${nodes.cp.first.id}]": [
         "$STACK_PATH/service.sh redeploy"
       ]
+    },
+    "expose:28080->80": {
+      "cmd[${this.id}]": [
+        "echo JELASTIC_EXPOSE=${globals.port} >> /.jelenv"
+      ],
+      "user": "root"
     },
     "addAllHosts2Hazelcast": {
       "forEach(nodes.cp)": {
@@ -195,11 +158,34 @@
         "$STACK_PATH/service.sh removeHost node${this.id}"
       ]
     },
+    "updateLinkInIndex": [
+      {
+        "localhost:4848->das:4848": {
+          "nodeGroup": "cp",
+          "dasNodeId": "${nodes.das.first.id}"
+        }
+      },
+      {
+        "localhost:4848->das:4848": {
+          "nodeGroup": "das",
+          "dasNodeId": "${nodes.das.first.id}"
+        }
+      }
+    ],
     "localhost:4848->das:4848": {
       "cmd": {
         "nodeGroup": "${this.nodeGroup}",
         "commands": "sed -i -e \"s/http.*:\\/\\/.*:4848/https:\\/\\/node${this.dasNodeId}-${env.domain}:4848/g\" ${STACK_PATH}/glassfish/domains/domain1/docroot/index.html"
       }
+    },
+    "updateLinkInNotDas": {
+      "cmd[cp]": [
+        "d=com/sun/enterprise/v3/admin/adapter",
+        "mkdir -p $d",
+        "echo '<html><head><meta http-equiv=\"refresh\" content=\"0;url=https://node${nodes.das.first.id}-${env.domain}:4848/\" /></head></html>' > $d/statusNotDAS.html",
+        "jar uf $STACK_PATH/glassfish/modules/kernel.jar $d/statusNotDAS.html",
+        "rm -rf com"
+      ]
     }
   },
   "addons": [
@@ -216,14 +202,14 @@
         {
           "api": "env.control.AddContainerVolumeByGroup",
           "nodeGroup": "cp",
-          "path": "${settings.path}"
+          "path": "${globals.path}"
         },
         {
           "api": "env.file.AddMountPointByGroup",
           "nodeGroup": "cp",
-          "path": "${settings.path}",
+          "path": "${globals.path}",
           "protocol": "nfs",
-          "sourcePath": "${settings.path}",
+          "sourcePath": "${globals.path}",
           "sourceNodeId": "${nodes.das.first.id}",
           "name": "SSH Keys",
           "readOnly": false
