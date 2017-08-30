@@ -1,265 +1,228 @@
 {
-  "jpsType": "update",
-  "jpsVersion": "0.99",
-  "id": "glassfish-cluster-addon",
-  "name": "GlassFish Cluster",
-  "logo": "https://github.com/jelastic-jps/glassfish/raw/master/glassfish-cluster/img/glassfish-logo.png",
-  "description": "Transforms standalone nodes to cluster",
-  "baseUrl": "https://raw.githubusercontent.com/jelastic-jps/glassfish/master/addons",
-  "globals": {
-    "path": "/home/jelastic/.ssh",
-    "port": "28080"
-  },
-  "onInstall": {
-    "if (nodes.das)": [
-      "cleanCluster",
-      {
-        "if ('${nodes.cp.first.customitem.dockerName}'.indexOf('payara') > -1)": "addAllHosts2Hazelcast"
-      },
-      "updateLinkInNotDas",
-      "restartContainers[cp]",
-      "updateLinkInIndex",
-      "restartRequired"
-    ],
-    "if (!nodes.das)": {
-      "if (nodes.cp.length == 1)": {
-        "localhost:4848->das:4848": {
-          "nodeGroup": "cp",
-          "dasNodeId": "${nodes.cp.first.id}"
-        }
-      },
-      "if (nodes.cp.length > 1)": {
-        "buildCluster": {
-          "redeploy": "false"
-        }
-      }
-    }
-  },
-  "onBeforeServiceScaleOut[cp]": [
-    {
-      "if (nodes.das)": {
-        "forEach(event.response.nodes)": [
-          {
-            "if ('${nodes.cp.first.customitem.dockerName}'.indexOf('payara') > -1)": {
-              "addHost2Hazelcast": {
-                "id": "${@i.id}"
-              }
-            }
-          },
-          {
-            "expose:28080->80": {
-              "id": "${@i.id}"
-            }
-          },
-          {
-            "localhost:4848->das:4848": {
-              "nodeGroup": "cp",
-              "dasNodeId": "${@i.id}"
-            }
-          },
-          "restartContainers[${@i.id}]"
+    "jpsType": "update",
+    "jpsVersion": "0.99",
+    "id": "glassfish-cluster-addon",
+    "name": "GlassFish Cluster",
+    "logo": "https://github.com/jelastic-jps/glassfish/raw/master/glassfish-cluster/img/glassfish-logo.png",
+    "description": "Transforms standalone nodes to cluster",
+    "baseUrl": "https://raw.githubusercontent.com/jelastic-jps/glassfish/master/addons",
+    "globals": {
+        "path": "/home/jelastic/.ssh",
+        "port": "28080"
+    },
+    "onInstall": [{
+        "if (nodes.das)": [
+            "cleanCluster", {
+                "if ('${nodes.cp.first.customitem.dockerName}'.indexOf('payara') > -1)": "addAllHosts2Hazelcast"
+            },
+            "updateLinkInNotDas",
+            "restartContainers[cp]",
+            "updateLinkInIndex",
+            "restartRequired"
         ]
-      }
-    },
-    {
-      "if (!nodes.das)": {
-        "buildCluster": {
-          "redeploy": "true"
+    }, {
+        "if (!nodes.das)": {
+            "if (nodes.cp.length == 1)": {
+                "localhost:4848->das:4848": {
+                    "nodeGroup": "cp",
+                    "dasNodeId": "${nodes.cp.first.id}"
+                }
+            },
+            "if (nodes.cp.length > 1)": [
+                "buildCluster", {
+                    "configureVolumesAndLinks": {
+                        "redeploy": "false"
+                    }
+                }
+            ]
         }
-      }
-    }
-  ],
-  "onBeforeScaleIn[cp]": {
-    "forEach(event.response.nodes)": [
-      {
-        "if ('${nodes.cp.first.customitem.dockerName}'.indexOf('payara') > -1)": {
-          "removeHostFromHazelcast": {
-            "id": "${@i.id}"
-          }
+    }],
+    "onBeforeServiceScaleOut[cp]": [{
+        "if (nodes.das)": {
+            "forEach(event.response.nodes)": [{
+                    "if ('${nodes.cp.first.customitem.dockerName}'.indexOf('payara') > -1)": {
+                        "addHost2Hazelcast": {
+                            "id": "${@i.id}"
+                        }
+                    }
+                }, {
+                    "expose:28080->80": {
+                        "id": "${@i.id}"
+                    }
+                }, {
+                    "localhost:4848->das:4848": {
+                        "nodeGroup": "cp",
+                        "dasNodeId": "${@i.id}"
+                    }
+                },
+                "restartContainers[${@i.id}]"
+            ]
         }
-      },
-      {
-        "cmd[${@i.id}]": "$STACK_PATH/service.sh delete"
-      }
-    ]
-  },
-  "onAfterScaleOut[cp]": "restartRequired",
-  "onAfterScaleIn[cp]": "restartRequired",
-  "onAfterClone": {
-    "if (nodes.das)": {
-      "install": {
-        "jps": "${baseUrl}/auto-cluster.jps?_r=${fn.random}",
-        "envName": "${event.response.env.envName}"
-      }
-    }
-  },
-  "actions": {
-    "cleanCluster": {
-      "cmd[das]": "$STACK_PATH/service.sh clean"
+    }, {
+        "if (!nodes.das)": ["buildCluster", {
+            "configureVolumesAndLinks": {
+                "redeploy": "true"
+            }
+        }]
+    }],
+    "onBeforeScaleIn[cp]": {
+        "forEach(event.response.nodes)": [{
+            "if ('${nodes.cp.first.customitem.dockerName}'.indexOf('payara') > -1)": {
+                "removeHostFromHazelcast": {
+                    "id": "${@i.id}"
+                }
+            }
+        }, {
+            "cmd[${@i.id}]": "$STACK_PATH/service.sh delete"
+        }]
     },
-    "buildCluster": [
-      {
-        "addNodes": {
-          "cloudlets": 16,
-          "displayName": "DAS",
-          "nodeType": "docker",
-          "nodeGroup": "das",
-          "dockerName": "${nodes.cp.first.customitem.dockerName}",
-          "dockerTag": "${nodes.cp.first.customitem.dockerTag}",
-          "metadata": {
-            "layer": "das"
-          },
-          "dockerEnvVars": {
-            "DAS": "true"
-          },
-          "dockerVolumes": [
-            "${globals.path}"
-          ],
-          "startService": false
+    "onAfterScaleOut[cp]": "restartRequired",
+    "onAfterScaleIn[cp]": "restartRequired",
+    "onAfterClone": {
+        "if (nodes.das)": {
+            "install": {
+                "jps": "${baseUrl}/auto-cluster.jps?_r=${fn.random}",
+                "envName": "${event.response.env.envName}"
+            }
         }
-      },
-      {
-        "installAddon": {
-          "id": "configureVolumesAndLinks",
-          "settings": {
-            "redeploy": "${this.redeploy}"
-          }
-        }
-      }
-    ],
-    "restartRequired": {
-      "cmd[das]": "$STACK_PATH/service.sh restartRequired"
     },
-    "redeployApps": {
-      "cmd[${nodes.cp.first.id}]": [
-        "$STACK_PATH/service.sh redeploy"
-      ]
-    },
-    "expose:28080->80": {
-      "cmd[${this.id}]": [
-        "echo JELASTIC_EXPOSE=${globals.port} >> /.jelenv"
-      ],
-      "user": "root"
-    },
-    "addAllHosts2Hazelcast": {
-      "forEach(nodes.cp)": {
+    "actions": {
+        "cleanCluster": {
+            "cmd[das]": "$STACK_PATH/service.sh clean"
+        },
+        "buildCluster": [{
+            "addNodes": {
+                "cloudlets": 16,
+                "displayName": "DAS",
+                "nodeType": "docker",
+                "nodeGroup": "das",
+                "dockerName": "${nodes.cp.first.customitem.dockerName}",
+                "dockerTag": "${nodes.cp.first.customitem.dockerTag}",
+                "metadata": {
+                    "layer": "das"
+                },
+                "dockerEnvVars": {
+                    "DAS": "true"
+                },
+                "dockerVolumes": [
+                    "${globals.path}"
+                ],
+                "startService": false
+            }
+        }],
+        "restartRequired": {
+            "cmd[das]": "$STACK_PATH/service.sh restartRequired"
+        },
+        "redeployApps": {
+            "cmd[${nodes.cp.first.id}]": [
+                "$STACK_PATH/service.sh redeploy"
+            ]
+        },
+        "expose:28080->80": {
+            "cmd[${this.id}]": [
+                "echo JELASTIC_EXPOSE=${globals.port} >> /.jelenv"
+            ],
+            "user": "root"
+        },
+        "addAllHosts2Hazelcast": {
+            "forEach(nodes.cp)": {
+                "addHost2Hazelcast": {
+                    "id": "${@i.id}"
+                }
+            }
+        },
         "addHost2Hazelcast": {
-          "id": "${@i.id}"
-        }
-      }
-    },
-    "addHost2Hazelcast": {
-      "cmd[${nodes.das.first.id}]": [
-        "$STACK_PATH/service.sh addHost node${this.id}"
-      ]
-    },
-    "removeHostFromHazelcast": {
-      "cmd[${nodes.das.first.id}]": [
-        "$STACK_PATH/service.sh removeHost node${this.id}"
-      ]
-    },
-    "updateLinkInIndex": [
-      {
+            "cmd[${nodes.das.first.id}]": [
+                "$STACK_PATH/service.sh addHost node${this.id}"
+            ]
+        },
+        "removeHostFromHazelcast": {
+            "cmd[${nodes.das.first.id}]": [
+                "$STACK_PATH/service.sh removeHost node${this.id}"
+            ]
+        },
+        "updateLinkInIndex": [{
+            "localhost:4848->das:4848": {
+                "nodeGroup": "cp",
+                "dasNodeId": "${nodes.das.first.id}"
+            }
+        }, {
+            "localhost:4848->das:4848": {
+                "nodeGroup": "das",
+                "dasNodeId": "${nodes.das.first.id}"
+            }
+        }],
         "localhost:4848->das:4848": {
-          "nodeGroup": "cp",
-          "dasNodeId": "${nodes.das.first.id}"
-        }
-      },
-      {
-        "localhost:4848->das:4848": {
-          "nodeGroup": "das",
-          "dasNodeId": "${nodes.das.first.id}"
-        }
-      }
-    ],
-    "localhost:4848->das:4848": {
-      "cmd": {
-        "nodeGroup": "${this.nodeGroup}",
-        "commands": "sed -i -e \"s/http.*:\\/\\/.*:4848/https:\\/\\/node${this.dasNodeId}-${env.domain}:4848/g\" ${STACK_PATH}/glassfish/domains/domain1/docroot/index.html"
-      }
-    },
-    "updateLinkInNotDas": {
-      "cmd[cp]": [
-        "d=com/sun/enterprise/v3/admin/adapter",
-        "mkdir -p $d",
-        "echo '<html><head><meta http-equiv=\"refresh\" content=\"0;url=https://node${nodes.das.first.id}-${env.domain}:4848/\" /></head></html>' > $d/statusNotDAS.html",
-        "jar uf $STACK_PATH/glassfish/modules/kernel.jar $d/statusNotDAS.html",
-        "rm -rf com"
-      ]
-    }
-  },
-  "addons": [
-    {
-      "id": "configureVolumesAndLinks",
-      "onInstall": [
-        {
-          "forEach(nodes.cp)": {
-            "if (${@i.ismaster})": {
-              "cmd[${@i.id}]": "cp $PSWD_FILE ~/pswd"
+            "cmd": {
+                "nodeGroup": "${this.nodeGroup}",
+                "commands": "sed -i -e \"s/http.*:\\/\\/.*:4848/https:\\/\\/node${this.dasNodeId}-${env.domain}:4848/g\" ${STACK_PATH}/glassfish/domains/domain1/docroot/index.html"
             }
-          }
         },
-        {
-          "api": "env.control.AddContainerVolumeByGroup",
-          "nodeGroup": "cp",
-          "path": "${globals.path}"
+        "updateLinkInNotDas": {
+            "cmd[cp]": [
+                "d=com/sun/enterprise/v3/admin/adapter",
+                "mkdir -p $d",
+                "echo '<html><head><meta http-equiv=\"refresh\" content=\"0;url=https://node${nodes.das.first.id}-${env.domain}:4848/\" /></head></html>' > $d/statusNotDAS.html",
+                "jar uf $STACK_PATH/glassfish/modules/kernel.jar $d/statusNotDAS.html",
+                "rm -rf com"
+            ]
         },
-        {
-          "api": "env.file.AddMountPointByGroup",
-          "nodeGroup": "cp",
-          "path": "${globals.path}",
-          "protocol": "nfs",
-          "sourcePath": "${globals.path}",
-          "sourceNodeId": "${nodes.das.first.id}",
-          "name": "SSH Keys",
-          "readOnly": false
-        },
-        {
-          "forEach(nodes.cp)": {
-            "if (${@i.ismaster})": {
-              "cmd[${@i.id}]": [
-                "mv ~/pswd ${PSWD_FILE}.old"
-              ]
-            }
-          }
-        },
-        {
-          "forEach(nodes.cp)": [
-            {
-              "cmd[${@i.id}]": [
-                "iptables -t nat -I PREROUTING -p tcp -m tcp --dport 4848 -j REDIRECT --to-ports 24848"
-              ],
-              "user": "root"
+        "configureVolumesAndLinks": [{
+                "forEach(nodes.cp)": {
+                    "if (${@i.ismaster})": {
+                        "cmd[${@i.id}]": "cp $PSWD_FILE ~/pswd"
+                    }
+                }
+            }, {
+                "api": "env.control.AddContainerVolumeByGroup",
+                "nodeGroup": "cp",
+                "path": "${globals.path}"
+            }, {
+                "api": "env.file.AddMountPointByGroup",
+                "nodeGroup": "cp",
+                "path": "${globals.path}",
+                "protocol": "nfs",
+                "sourcePath": "${globals.path}",
+                "sourceNodeId": "${nodes.das.first.id}",
+                "name": "SSH Keys",
+                "readOnly": false
+            }, {
+                "forEach(nodes.cp)": {
+                    "if (${@i.ismaster})": {
+                        "cmd[${@i.id}]": [
+                            "mv ~/pswd ${PSWD_FILE}.old"
+                        ]
+                    }
+                }
+            }, {
+                "forEach(nodes.cp)": [{
+                    "cmd[${@i.id}]": [
+                        "iptables -t nat -I PREROUTING -p tcp -m tcp --dport 4848 -j REDIRECT --to-ports 24848"
+                    ],
+                    "user": "root"
+                }, {
+                    "api": "env.control.LinkDockerNodes",
+                    "sourceNodeId": "${nodes.das.first.id}",
+                    "targetNodeId": "${@i.id}",
+                    "alias": "das",
+                    "groupAlias": "das"
+                }, {
+                    "expose:28080->80": {
+                        "id": "${@i.id}"
+                    }
+                }]
+            }, {
+                "if ('${nodes.cp.first.customitem.dockerName}'.indexOf('payara') > -1)": "addAllHosts2Hazelcast"
+            }, {
+                "api": "env.control.ExecDockerRunCmd",
+                "nodeId": "${nodes.das.first.id}"
+            }, {
+                "if (${this.redeploy})": "redeployApps"
             },
-            {
-              "api": "env.control.LinkDockerNodes",
-              "sourceNodeId": "${nodes.das.first.id}",
-              "targetNodeId": "${@i.id}",
-              "alias": "das",
-              "groupAlias": "das"
-            },
-            {
-              "expose:28080->80": {
-                "id": "${@i.id}"
-              }
-            }
-          ]
-        },
-        {
-          "if ('${nodes.cp.first.customitem.dockerName}'.indexOf('payara') > -1)": "addAllHosts2Hazelcast"
-        },
-        {
-          "api": "env.control.ExecDockerRunCmd",
-          "nodeId": "${nodes.das.first.id}"
-        },
-        {
-          "if (${settings.redeploy})": "redeployApps"
-        },
-        "updateLinkInNotDas",
-        "restartContainers[cp]",
-        "updateLinkInIndex",
-        "restartRequired"
-      ]
+            "updateLinkInNotDas",
+            "restartContainers[cp]",
+            "updateLinkInIndex",
+            "restartRequired"
+        ]
     }
-  ]
 }
