@@ -84,12 +84,13 @@
         }
     },
     "procedures": {
-        "expose:28080->80": {
-          "cmd[${this.id}]": [
-            "echo JELASTIC_EXPOSE=${globals.port} >> /.jelenv"
-          ],
-          "user": "root"
-        }
+      "id": "expose:28080->80",
+      "onCall": {
+        "cmd[${this.id}]": [
+          "echo JELASTIC_EXPOSE=${globals.port} >> /.jelenv"
+        ],
+        "user": "root"
+      }
     },
     "actions": {
         "cleanCluster": {
