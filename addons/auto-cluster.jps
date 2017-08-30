@@ -83,6 +83,14 @@
             }
         }
     },
+    "procedures": {
+        "expose:28080->80": {
+          "cmd[${this.id}]": [
+            "echo JELASTIC_EXPOSE=${globals.port} >> /.jelenv"
+          ],
+          "user": "root"
+        }
+    },
     "actions": {
         "cleanCluster": {
             "cmd[das]": "$STACK_PATH/service.sh clean"
@@ -121,12 +129,6 @@
             "cmd[${nodes.cp.first.id}]": [
                 "$STACK_PATH/service.sh redeploy"
             ]
-        },
-        "expose:28080->80": {
-            "cmd[${this.id}]": [
-                "echo JELASTIC_EXPOSE=${globals.port} >> /.jelenv"
-            ],
-            "user": "root"
         },
         "addAllHosts2Hazelcast": {
             "forEach(nodes.cp)": {
@@ -174,6 +176,10 @@
     },
     "addons": [{
         "id": "configureVolumesAndLinks",
+        "globals": {
+            "path": "/home/jelastic/.ssh",
+            "port": "28080"
+        },
         "onInstall": [{
                 "forEach(nodes.cp)": {
                     "if (${@i.ismaster})": {
