@@ -37,11 +37,13 @@
                     "dasNodeId": "${nodes.cp.first.id}"
                 }
             },
-            "if (nodes.cp.length > 1)": {
-                "buildCluster": {
-                    "redeploy": "false"
+            "if (nodes.cp.length > 1)": [
+                "buildCluster", {
+                    "configureCluster": {
+                        "redeploy": false
+                    }
                 }
-            }
+            ]
         }
     }],
     "onBeforeServiceScaleOut[cp]": [{
@@ -66,11 +68,13 @@
             ]
         }
     }, {
-        "if (!nodes.das)": {
-            "buildCluster": {
-                "redeploy": "true"
+        "if (!nodes.das)": [
+            "buildCluster", {
+                "configureCluster": {
+                    "redeploy": true
+                }
             }
-        }
+        ]
     }],
     "onBeforeScaleIn[cp]": {
         "forEach(event.response.nodes)": [{
@@ -124,15 +128,6 @@
                 ],
                 "startService": false
             }
-        }, {
-            "script": [
-                "var resp = jelastic.environment.control.GetEnvInfo('${env.envName}', session);",
-                "for (var i = 0, node; node = resp.nodes[i]; i++) {",
-                "  if (node.nodeGroup == 'das' && node.ismaster) {",
-                "    return { result: 0, onAfterReturn : {configureVolumesAndLinks: {dasNodeId: node.id, redeploy: ${this.redeploy} }}};",
-                "  }",
-                "}"
-            ]
         }],
         "restartRequired": {
             "cmd[${this.dasNodeId}]": "$STACK_PATH/service.sh restartRequired"
@@ -172,13 +167,12 @@
             }
         }, {
             "localhost:4848->das:4848": {
-                "nodeId": "${this.dasNodeId}",
+                "nodeGroup": "das",
                 "dasNodeId": "${this.dasNodeId}"
             }
         }],
         "localhost:4848->das:4848": {
             "cmd": {
-                "nodeId": "${this.nodeId}",
                 "nodeGroup": "${this.nodeGroup}",
                 "commands": "sed -i -e \"s/http.*:\\/\\/.*:4848/https:\\/\\/node${this.dasNodeId}-${env.domain}:4848/g\" ${STACK_PATH}/glassfish/domains/domain1/docroot/index.html"
             }
@@ -190,6 +184,16 @@
                 "echo '<html><head><meta http-equiv=\"refresh\" content=\"0;url=https://node${this.dasNodeId}-${env.domain}:4848/\" /></head></html>' > $d/statusNotDAS.html",
                 "jar uf $STACK_PATH/glassfish/modules/kernel.jar $d/statusNotDAS.html",
                 "rm -rf com"
+            ]
+        },
+        "configureCluster": {
+            "script": [
+                "var resp = jelastic.environment.control.GetEnvInfo('${env.envName}', session);",
+                "for (var i = 0, node; node = resp.nodes[i]; i++) {",
+                "  if (node.nodeGroup == 'das' && node.ismaster) {",
+                "    return { result: 0, onAfterReturn : {configureVolumesAndLinks: {dasNodeId: node.id, redeploy: ${this.redeploy} }}};",
+                "  }",
+                "}"
             ]
         },
         "configureVolumesAndLinks": [{
