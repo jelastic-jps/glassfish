@@ -130,7 +130,8 @@
             }
         }],
         "restartRequired": {
-            "cmd[${this.dasNodeId}]": "$STACK_PATH/service.sh restartRequired"
+            "cmdViaApiById": "${this.dasNodeId}", 
+            "command": "$STACK_PATH/service.sh restartRequired"
         },
         "redeployApps": {
             "cmd[${nodes.cp.first.id}]": [
@@ -172,9 +173,9 @@
             }
         }],
         "localhost:4848->das:4848": {
-            "cmd": {
+            "cmdViaApiByGroup": {
                 "nodeGroup": "${this.nodeGroup}",
-                "commands": "sed -i -e \"s/http.*:\\/\\/.*:4848/https:\\/\\/node${this.dasNodeId}-${env.domain}:4848/g\" ${STACK_PATH}/glassfish/domains/domain1/docroot/index.html"
+                "command": "sed -i -e \"s/http.*:\\/\\/.*:4848/https:\\/\\/node${this.dasNodeId}-${env.domain}:4848/g\" ${STACK_PATH}/glassfish/domains/domain1/docroot/index.html"
             }
         },
         "updateLinkInNotDas": {
@@ -185,6 +186,16 @@
                 "jar uf $STACK_PATH/glassfish/modules/kernel.jar $d/statusNotDAS.html",
                 "rm -rf com"
             ]
+        },
+        "cmdViaApiByGroup": {
+            "api": "env.control.ExecCmdByGroup",
+            "nodeGroup": "${this.nodeGroup}",
+            "commandList": "[{command: \"${this.command}\"}]"
+        },
+        "cmdViaApiById": {
+            "api": "env.control.ExecCmdById",
+            "nodeId": "${this.nodeId}",
+            "commandList": "[{command: \"${this.command}\"}]"
         },
         "configureCluster": {
             "script": [
