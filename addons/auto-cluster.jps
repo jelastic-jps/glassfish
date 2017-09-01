@@ -37,13 +37,11 @@
                     "dasNodeId": "${nodes.cp.first.id}"
                 }
             },
-            "if (nodes.cp.length > 1)": [
-                "buildCluster", {
-                    "configureCluster": {
-                        "redeploy": false
-                    }
+            "if (nodes.cp.length > 1)": {
+                "buildCluster": {
+                    "redeploy": false
                 }
-            ]
+            }
         }
     }],
     "onBeforeServiceScaleOut[cp]": [{
@@ -68,13 +66,11 @@
             ]
         }
     }, {
-        "if (!nodes.das)": [
-            "buildCluster", {
-                "configureCluster": {
-                    "redeploy": true
-                }
+        "if (!nodes.das)": {
+            "buildCluster": {
+                "redeploy": true
             }
-        ]
+        }
     }],
     "onBeforeScaleIn[cp]": {
         "forEach(event.response.nodes)": [{
@@ -128,9 +124,18 @@
                 ],
                 "startService": false
             }
+        }, {
+            "script": [
+                "var resp = jelastic.environment.control.GetEnvInfo('${env.envName}', session);",
+                "for (var i = 0, node; node = resp.nodes[i]; i++) {",
+                "  if (node.nodeGroup == 'das' && node.ismaster) {",
+                "    return { result: 0, onAfterReturn : {configureVolumesAndLinks: {dasNodeId: node.id, redeploy: ${this.redeploy} }}};",
+                "  }",
+                "}"
+            ]
         }],
         "restartRequired": {
-            "cmdViaApiById": "${this.dasNodeId}", 
+            "cmdViaApiByGroup": "das",
             "command": "$STACK_PATH/service.sh restartRequired"
         },
         "redeployApps": {
@@ -152,9 +157,10 @@
             }
         },
         "addHost2Hazelcast": {
-            "cmd[das]": [
-                "$STACK_PATH/service.sh addHost node${this.id}"
-            ]
+            "cmdViaApiByGroup": {
+                "nodeGroup": "das",
+                "command": "$STACK_PATH/service.sh addHost node${this.id}"
+            }
         },
         "removeHostFromHazelcast": {
             "cmd[das]": [
@@ -190,22 +196,7 @@
         "cmdViaApiByGroup": {
             "api": "env.control.ExecCmdByGroup",
             "nodeGroup": "${this.nodeGroup}",
-            "commandList": "[{command: \"${this.command}\"}]"
-        },
-        "cmdViaApiById": {
-            "api": "env.control.ExecCmdById",
-            "nodeId": "${this.nodeId}",
-            "commandList": "[{command: \"${this.command}\"}]"
-        },
-        "configureCluster": {
-            "script": [
-                "var resp = jelastic.environment.control.GetEnvInfo('${env.envName}', session);",
-                "for (var i = 0, node; node = resp.nodes[i]; i++) {",
-                "  if (node.nodeGroup == 'das' && node.ismaster) {",
-                "    return { result: 0, onAfterReturn : {configureVolumesAndLinks: {dasNodeId: node.id, redeploy: ${this.redeploy} }}};",
-                "  }",
-                "}"
-            ]
+            "commandList": "[{command: '${this.command}'}]"
         },
         "configureVolumesAndLinks": [{
                 "forEach(nodes.cp)": {
