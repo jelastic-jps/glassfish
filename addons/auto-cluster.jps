@@ -138,7 +138,7 @@
             }
         ],
         "restartRequired": {
-            "cmdViaApiByGroup": "das",
+            "cmdViaApiByGroup": "${this.dasNodeId}",
             "command": "$STACK_PATH/service.sh restartRequired"
         },
         "redeployApps": {
