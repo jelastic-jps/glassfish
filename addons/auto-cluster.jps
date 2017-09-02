@@ -41,7 +41,7 @@
         "if (!nodes.das)": {
             "if (nodes.cp.length == 1)": {
                 "localhost:4848->das:4848": {
-                    "nodeGroup": "cp",
+                    "nodeId": "${nodes.cp.first.id}",
                     "dasNodeId": "${nodes.cp.first.id}"
                 }
             },
