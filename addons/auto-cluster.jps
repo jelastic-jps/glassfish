@@ -13,14 +13,26 @@
     "onInstall": [{
         "if (nodes.das)": [
             "cleanCluster", {
-                "if ('${nodes.cp.first.customitem.dockerName}'.indexOf('payara') > -1)": "addAllHosts2Hazelcast"
-            }, {
-                "updateLinkInNotDasWelcome": {
-                    "nodeId": "cp",
-                    "dasNodeId": "${this.dasNodeId}"
+                "localhost:4848->das:4848": {
+                    "nodeId": "${nodes.das.first.id}",
+                    "dasNodeId": "${nodes.das.first.id}"
                 }
             }, {
-                "postBuildClusterConfig": {
+                "forEach(nodes.cp)": [{
+                    "exposePortsAndUpdateLink2Das": {
+                        "nodeId": "${@i.id}",
+                        "dasNodeId": "${nodes.das.first.id}"
+                    }
+                }, {
+                    "if ('${nodes.cp.first.customitem.dockerName}'.indexOf('payara') > -1)": {
+                        "addHost2Hazelcast": {
+                            "nodeId": "${@i.id}",
+                            "dasNodeId": "${nodes.das.first.id}"
+                        }
+                    }
+                }]
+            }, "restartContainers[cp]", {
+                "restartRequired": {
                     "dasNodeId": "${nodes.das.first.id}"
                 }
             }
@@ -45,11 +57,12 @@
             "forEach(event.response.nodes)": [{
                     "if ('${nodes.cp.first.customitem.dockerName}'.indexOf('payara') > -1)": {
                         "addHost2Hazelcast": {
-                            "id": "${@i.id}"
+                            "nodeId": "${@i.id}",
+                            "dasNodeId": "${nodes.das.first.id}"
                         }
                     }
                 }, {
-                    "exposePortAndUpdateLink2Das": {
+                    "exposePortsAndUpdateLink2Das": {
                         "nodeId": "${@i.id}",
                         "dasNodeId": "${nodes.das.first.id}"
                     }
@@ -126,20 +139,9 @@
                 "}"
             ]
         }],
-        "postBuildClusterConfig": [
-            "restartContainers[cp]", {
-                "updateLinkInWelcomeHtml": {
-                    "dasNodeId": "${this.dasNodeId}"
-                }
-            }, {
-                "restartRequired": {
-                    "dasNodeId": "${this.dasNodeId}"
-                }
-            }
-        ],
         "restartRequired": {
-            "cmdViaApiByGroup": {
-                "nodeGroup": "das",
+            "cmdViaApiById": {
+                "nodeId": "${this.dasNodeId}",
                 "command": "$STACK_PATH/service.sh restartRequired"
             }
         },
@@ -148,23 +150,17 @@
                 "$STACK_PATH/service.sh redeploy"
             ]
         },
-        "expose:28080->80": {
+        "exposePorts": {
             "cmd[${this.nodeId}]": [
-                "echo JELASTIC_EXPOSE=${globals.port} >> /.jelenv"
+                "echo JELASTIC_EXPOSE=${globals.port} >> /.jelenv",
+                "iptables -t nat -I PREROUTING -p tcp -m tcp --dport 4848 -j REDIRECT --to-ports 24848"
             ],
             "user": "root"
         },
-        "addAllHosts2Hazelcast": {
-            "forEach(nodes.cp)": {
-                "addHost2Hazelcast": {
-                    "id": "${@i.id}"
-                }
-            }
-        },
         "addHost2Hazelcast": {
-            "cmdViaApiByGroup": {
-                "nodeGroup": "das",
-                "command": "$STACK_PATH/service.sh addHost node${this.id}"
+            "cmdViaApiById": {
+                "nodeId": "${this.dasNodeId}",
+                "command": "$STACK_PATH/service.sh addHost node${this.nodeId}"
             }
         },
         "removeHostFromHazelcast": {
@@ -172,34 +168,28 @@
                 "$STACK_PATH/service.sh removeHost node${this.id}"
             ]
         },
-        "updateLinkInWelcomeHtml": [{
-            "localhost:4848->das:4848": {
-                "nodeGroup": "cp",
-                "dasNodeId": "${this.dasNodeId}"
-            }
-        }, {
-            "localhost:4848->das:4848": {
-                "nodeGroup": "das",
-                "dasNodeId": "${this.dasNodeId}"
-            }
-        }],
         "localhost:4848->das:4848": {
-            "cmdViaApiByGroup": {
-                "nodeGroup": "${this.nodeGroup}",
+            "cmdViaApiById": {
+                "nodeId": "${this.nodeId}",
                 "command": "sed -i -e \"s/http.*:\\/\\/.*:4848/https:\\/\\/node${this.dasNodeId}-${env.domain}:4848/g\" ${STACK_PATH}/glassfish/domains/domain1/docroot/index.html"
             }
         },
-        "exposePortAndUpdateLink2Das": [{
-            "expose:28080->80": {
+        "exposePortsAndUpdateLink2Das": [{
+            "exposePorts": {
                 "nodeId": "${this.nodeId}"
             }
         }, {
-            "updateLinkInNotDasWelcome": {
+            "localhost:4848->das:4848": {
+                "nodeId": "${this.nodeId}",
+                "dasNodeId": "${this.dasNodeId}"
+            }
+        }, {
+            "addRedirect2DasAdmin": {
                 "nodeId": "${this.nodeId}",
                 "dasNodeId": "${this.dasNodeId}"
             }
         }],
-        "updateLinkInNotDasWelcome": {
+        "addRedirect2DasAdmin": {
             "cmd[${this.nodeId}]": [
                 "d=com/sun/enterprise/v3/admin/adapter",
                 "mkdir -p $d",
@@ -208,9 +198,9 @@
                 "rm -rf com"
             ]
         },
-        "cmdViaApiByGroup": {
-            "api": "env.control.ExecCmdByGroup",
-            "nodeGroup": "${this.nodeGroup}",
+        "cmdViaApiById": {
+            "api": "env.control.ExecCmdById",
+            "nodeId": "${this.nodeId}",
             "commandList": [{
                 "command": "${this.command}"
             }]
@@ -235,19 +225,12 @@
             "name": "SSH Keys",
             "readOnly": false
         }, {
-            "forEach(nodes.cp)": {
+            "forEach(nodes.cp)": [{
                 "if (${@i.ismaster})": {
                     "cmd[${@i.id}]": [
                         "mv ~/pswd ${PSWD_FILE}.old"
                     ]
                 }
-            }
-        }, {
-            "forEach(nodes.cp)": [{
-                "cmd[${@i.id}]": [
-                    "iptables -t nat -I PREROUTING -p tcp -m tcp --dport 4848 -j REDIRECT --to-ports 24848"
-                ],
-                "user": "root"
             }, {
                 "api": "env.control.LinkDockerNodes",
                 "sourceNodeId": "${this.dasNodeId}",
@@ -255,20 +238,30 @@
                 "alias": "das",
                 "groupAlias": "das"
             }, {
-                "exposePortAndUpdateLink2Das": {
+                "exposePortsAndUpdateLink2Das": {
                     "nodeId": "${@i.id}",
                     "dasNodeId": "${this.dasNodeId}"
                 }
+            }, {
+                "if ('${nodes.cp.first.customitem.dockerName}'.indexOf('payara') > -1)": {
+                    "addHost2Hazelcast": {
+                        "nodeId": "${@i.id}",
+                        "dasNodeId": "${this.dasNodeId}"
+                    }
+                }
             }]
         }, {
-            "if ('${nodes.cp.first.customitem.dockerName}'.indexOf('payara') > -1)": "addAllHosts2Hazelcast"
+            "localhost:4848->das:4848": {
+                "nodeId": "${this.dasNodeId}",
+                "dasNodeId": "${this.dasNodeId}"
+            }
         }, {
             "api": "env.control.ExecDockerRunCmd",
             "nodeId": "${this.dasNodeId}"
         }, {
             "if (${this.redeploy})": "redeployApps"
-        }, {
-            "postBuildClusterConfig": {
+        }, "restartContainers[cp]", {
+            "restartRequired": {
                 "dasNodeId": "${this.dasNodeId}"
             }
         }]
