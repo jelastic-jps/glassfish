@@ -6,16 +6,9 @@
     "logo": "https://github.com/jelastic-jps/glassfish/raw/master/glassfish-cluster/img/glassfish-logo.png",
     "description": "Transforms standalone nodes to cluster",
     "baseUrl": "https://raw.githubusercontent.com/jelastic-jps/glassfish/master/addons",
-    "settings": {
-        "fields": [{
-            "name": "path",
-            "type": "string",
-            "inputType": "hidden",
-            "default": "/home/jelastic/.ssh"
-        }]
-    },
     "globals": {
-        "port": "28080"
+        "port": "28080",
+        "path": "/home/jelastic/.ssh"
     },
     "onInstall": [{
         "if (nodes.das)": [
@@ -130,7 +123,7 @@
                     "DAS": "true"
                 },
                 "dockerVolumes": [
-                    "${settings.path}"
+                    "${globals.path}"
                 ],
                 "startService": false
             }
@@ -219,13 +212,13 @@
         }, {
             "api": "env.control.AddContainerVolumeByGroup",
             "nodeGroup": "cp",
-            "path": "${settings.path}"
+            "path": "${globals.path}"
         }, {
             "api": "env.file.AddMountPointByGroup",
             "nodeGroup": "cp",
-            "path": "${settings.path}",
+            "path": "${globals.path}",
             "protocol": "nfs",
-            "sourcePath": "${settings.path}",
+            "sourcePath": "${globals.path}",
             "sourceNodeId": "${this.dasNodeId}",
             "name": "SSH Keys",
             "readOnly": false
