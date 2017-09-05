@@ -9,7 +9,8 @@
     "settings": {
         "fields": [{
             "name": "path",
-            "type": "hidden",
+            "type": "string",
+            "inputType": "hidden",
             "default": "/home/jelastic/.ssh"
         }]
     },
