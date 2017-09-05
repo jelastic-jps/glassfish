@@ -99,11 +99,9 @@
         }
     },
     "onAfterClone": {
-        "if (nodes.das)": {
-            "install": {
-                "jps": "${baseUrl}/auto-cluster.jps?_r=${fn.random}",
-                "envName": "${event.response.env.envName}"
-            }
+        "install": {
+            "jps": "${baseUrl}/auto-cluster.jps?_r=${fn.random}",
+            "envName": "${event.response.env.envName}"
         }
     },
     "actions": {
