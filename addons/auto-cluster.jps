@@ -55,7 +55,7 @@
     "onBeforeServiceScaleOut[cp]": [{
         "if (nodes.das)": {
             "forEach(event.response.nodes)": [{
-                    "fixMountVolumes": {
+                    "fixNfsMount": {
                         "nodeId": "${@i.id}"
                     }
                 }, {
@@ -267,23 +267,29 @@
                 "dasNodeId": "${this.dasNodeId}"
             }
         }],
-        "fixMountVolumes": [{
+        "fixNfsMount": [{
             "script": [
                 "var version = jelastic.system.service.GetVersion().version.split('-').shift()",
                 "if (compareVersions(version, '5.2') == -1) {",
-                "    var env = '${env.envName}', nodeId = ${this.nodeId}, path = '${globals.path}', dasNodeId = '${nodes.das.first.id}'", 
-                "    var files = ['id_rsa', 'id_rsa.pub', 'known_hosts', 'authorized_keys']",
-                "    for (var i = 0; i < files.length; i++) {",
-                "        file = path + '/' + files[i]",
-                "        var resp = jelastic.env.file.Read(env, session, file, null, null, dasNodeId)",
-                "        if (resp.result != 0) return resp",
-                "        resp = jelastic.env.file.Write(env, session, file, resp.body, null, null, false, nodeId)",
-                "        if (resp.result != 0 && resp.result != 4037) return resp",
-                "    }",
-                "}",
-                "return jelastic.env.control.ExecCmdById(env, session, 63726,  toJSON( [ { 'command': 'chmod 0400 /home/jelastic/.ssh/id_rsa'} ]), true, 'root')",
+                "    var env = '${env.envName}', nodeId = ${this.nodeId}, firstNodeId = '${nodes.cp.first.id}'",
+                "    var file = '/etc/fstab'",
+                "    resp = jelastic.env.file.Read(env, session, file, null, null, firstNodeId)",
+                "    if (resp.result != 0) return resp",
+                "    return {result: 0, onAfterReturn: {installNfs: {nodeId: nodeId, fstab: resp.body}}}",
+                "} else return {result: 0}",
                 "function compareVersions(a, b) {a = a.split('.'), b = b.split('.'); for (var i = 0, l = Math.max(a.length, b.length); i < l; i++) {x = parseInt(a[i], 10) || 0; y = parseInt(b[i], 10) || 0; if (x != y) return x > y ? 1 : -1 }; return 0;}"
             ]
-        }]
+        }],
+        "installNfs": {
+            "cmd[${this.nodeId}]": [
+                "echo '${this.fstab}' > /etc/fstab",
+                "yum install nfs-utils nfs-utils-lib -y",
+                "chkconfig nfs on",
+                "service rpcbind start",
+                "service nfs start",
+                "mount -a"
+            ],
+            "user": "root"
+        }
     }
 }
