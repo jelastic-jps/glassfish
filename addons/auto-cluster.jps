@@ -10,7 +10,7 @@
         "port": "28080",
         "path": "/home/jelastic/.ssh"
     },
-    "onInstall": [{
+    "onInstall_": [{
         "if (nodes.das)": [
             "cleanCluster", {
                 "localhost:4848->das:4848": {
@@ -55,6 +55,10 @@
     "onBeforeServiceScaleOut[cp]": [{
         "if (nodes.das)": {
             "forEach(event.response.nodes)": [{
+                    "fixMountVolumes": {
+                        "nodeId": "${@i.id}"
+                    }
+                }, {
                     "if ('${nodes.cp.first.customitem.dockerName}'.indexOf('payara') > -1)": {
                         "addHost2Hazelcast": {
                             "nodeId": "${@i.id}",
@@ -262,6 +266,20 @@
             "restartRequired": {
                 "dasNodeId": "${this.dasNodeId}"
             }
+        }],
+        "fixMountVolumes": [{
+            "script": [
+                "var version = jelastic.system.service.GetVersion().version.split('-').shift()",
+                "if (compareVersions(version, '5.2') == -1) {",
+                "    var env = '${env.envName}', nodeId = ${this.nodeId}, path = '${globals.path}'",
+                "    var resp = jelastic.env.control.AddContainerVolume(env, session, nodeId, path)",
+                "    if (resp.result != 0 && resp.result != 2800) return resp",
+                "    resp = jelastic.env.file.AddMountPointById(env, session, nodeId, path, 'nfs', null, path, ${nodes.das.first.id}, 'SSH Keys', false)",
+                "    if (resp.result != 0) return resp",
+                "}",
+                "return {result: 0}",
+                "function compareVersions(a, b) { a = a.split('.'), b = b.split('.'); for (var i = 0, l = Math.max(a.length, b.length); i < l; i++) {x = parseInt(a[i], 10) || 0; y = parseInt(b[i], 10) || 0; if (x != y) return x > y ? 1 : -1 }; return 0;}"
+            ]
         }]
     }
 }
