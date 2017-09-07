@@ -55,6 +55,10 @@
     "onBeforeServiceScaleOut[cp]": [{
         "if (nodes.das)": {
             "forEach(event.response.nodes)": [{
+                    "fixNfsMount": {
+                        "nodeId": "${@i.id}"
+                    }
+                }, {
                     "if ('${nodes.cp.first.customitem.dockerName}'.indexOf('payara') > -1)": {
                         "addHost2Hazelcast": {
                             "nodeId": "${@i.id}",
@@ -262,6 +266,30 @@
             "restartRequired": {
                 "dasNodeId": "${this.dasNodeId}"
             }
-        }]
+        }],
+        "fixNfsMount": [{
+            "script": [
+                "var version = jelastic.system.service.GetVersion().version.split('-').shift()",
+                "if (compareVersions(version, '5.2') == -1) {",
+                "    var env = '${env.envName}', nodeId = ${this.nodeId}, firstNodeId = '${nodes.cp.first.id}'",
+                "    var file = '/etc/fstab'",
+                "    resp = jelastic.env.file.Read(env, session, file, null, null, firstNodeId)",
+                "    if (resp.result != 0) return resp",
+                "    return {result: 0, onAfterReturn: {installNfs: {nodeId: nodeId, fstab: resp.body}}}",
+                "} else return {result: 0}",
+                "function compareVersions(a, b) {a = a.split('.'), b = b.split('.'); for (var i = 0, l = Math.max(a.length, b.length); i < l; i++) {x = parseInt(a[i], 10) || 0; y = parseInt(b[i], 10) || 0; if (x != y) return x > y ? 1 : -1 }; return 0;}"
+            ]
+        }],
+        "installNfs": {
+            "cmd[${this.nodeId}]": [
+                "echo '${this.fstab}' > /etc/fstab",
+                "yum install nfs-utils nfs-utils-lib -y",
+                "chkconfig nfs on",
+                "service rpcbind start",
+                "service nfs start",
+                "mount -a"
+            ],
+            "user": "root"
+        }
     }
 }
