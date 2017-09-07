@@ -7,8 +7,8 @@
     "description": "Transforms standalone nodes to cluster",
     "baseUrl": "https://raw.githubusercontent.com/jelastic-jps/glassfish/master/addons",
     "globals": {
-        "path": "/home/jelastic/.ssh",
-        "port": "28080"
+        "port": "28080",
+        "path": "/home/jelastic/.ssh"
     },
     "onInstall": [{
         "if (nodes.das)": [
@@ -99,11 +99,9 @@
         }
     },
     "onAfterClone": {
-        "if (nodes.das)": {
-            "install": {
-                "jps": "${baseUrl}/auto-cluster.jps?_r=${fn.random}",
-                "envName": "${event.response.env.envName}"
-            }
+        "install": {
+            "jps": "${baseUrl}/auto-cluster.jps?_r=${fn.random}",
+            "envName": "${event.response.env.envName}"
         }
     },
     "actions": {
