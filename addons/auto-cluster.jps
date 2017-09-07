@@ -10,6 +10,11 @@
         "port": "28080",
         "path": "/home/jelastic/.ssh"
     },
+    "_onInstall": {
+        "fixMountVolumes": {
+            "nodeId": "63720"
+        }
+    },
     "onInstall": [{
         "if (nodes.das)": [
             "cleanCluster", {
@@ -271,11 +276,17 @@
             "script": [
                 "var version = jelastic.system.service.GetVersion().version.split('-').shift()",
                 "if (compareVersions(version, '5.2') == -1) {",
-                "    var env = '${env.envName}', nodeId = ${this.nodeId}, path = '${globals.path}'",
-                "    var resp = jelastic.env.control.AddContainerVolume(env, session, nodeId, path)",
-                "    if (resp.result != 0 && resp.result != 2800) return resp",
-                "    resp = jelastic.env.file.AddMountPointById(env, session, nodeId, path, 'nfs', null, path, ${nodes.das.first.id}, 'SSH Keys', false)",
-                "    if (resp.result != 0) return resp",
+                "    var env = '${env.envName}', nodeId = ${this.nodeId}, path = '${globals.path}', dasNodeId = '${nodes.das.first.id}', files = ['id_rsa', 'id_rsa.pub', 'known_hosts']",
+                "//    var resp = jelastic.env.control.AddContainerVolume(env, session, nodeId, path)",
+                "//    if (resp.result != 0 && resp.result != 2800) return resp",
+                "//    resp = jelastic.env.file.AddMountPointById(env, session, nodeId, path, 'nfs', null, path, dasNodeId, 'SSH Keys', false)",
+                "      for (var i = 0; i < files.length; i++) {",
+                "        file = path + '/' + files[i]",
+                "        var resp = jelastic.env.file.Read(env, session, file, null, null, dasNodeId)",
+                "        if (resp.result != 0) return resp",
+                "        resp = jelastic.env.file.Write(env, session, file, resp.body, null, null, false, nodeId)",
+                "        if (resp.result != 0) return resp",
+                "    }",
                 "}",
                 "return {result: 0}",
                 "function compareVersions(a, b) { a = a.split('.'), b = b.split('.'); for (var i = 0, l = Math.max(a.length, b.length); i < l; i++) {x = parseInt(a[i], 10) || 0; y = parseInt(b[i], 10) || 0; if (x != y) return x > y ? 1 : -1 }; return 0;}"
