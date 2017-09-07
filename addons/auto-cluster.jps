@@ -10,7 +10,7 @@
         "port": "28080",
         "path": "/home/jelastic/.ssh"
     },
-    "onInstall_": [{
+    "onInstall": [{
         "if (nodes.das)": [
             "cleanCluster", {
                 "localhost:4848->das:4848": {
