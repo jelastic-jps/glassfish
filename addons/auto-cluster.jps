@@ -152,6 +152,17 @@
                 "$STACK_PATH/service.sh redeploy"
             ]
         },
+        "redeployConfigs": [{
+                "cmd[${nodes.cp.first.id}]": [
+                    "cp $STACK_PATH/glassfish/domains/domain1/config/domain.xml ${globals.path}/domain.xml"
+                ]
+            }, {
+                "cmdViaApiById": {
+                    "nodeId": "${this.dasNodeId}",
+                    "command": "mv ${globals.path}/domain.xml $STACK_PATH/glassfish/domains/domain1/config/domain.xml"
+                }
+            }
+        ],
         "exposePorts": {
             "cmd[${this.nodeId}]": [
                 "echo JELASTIC_EXPOSE=${globals.port} >> /.jelenv",
@@ -256,6 +267,12 @@
             "localhost:4848->das:4848": {
                 "nodeId": "${this.dasNodeId}",
                 "dasNodeId": "${this.dasNodeId}"
+            }
+        }, {
+            "if (${this.redeploy})": {
+                "redeployConfigs": {
+                    "dasNodeId": "${this.dasNodeId}"
+                }
             }
         }, {
             "api": "env.control.ExecDockerRunCmd",
