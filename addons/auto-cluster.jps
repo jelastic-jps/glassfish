@@ -157,7 +157,7 @@
                 "cp $STACK_PATH/glassfish/domains/domain1/config/domain.xml ${globals.path}/domain.xml"
             ]
         }, {
-            "cmd[${nodes.das.first.id}]": [
+            "cmd[${this.dasNodeId}]": [
                 "mv ${globals.path}/domain.xml $STACK_PATH/glassfish/domains/domain1/config/domain.xml"
             ]
         }],
@@ -267,7 +267,11 @@
                 "dasNodeId": "${this.dasNodeId}"
             }
         }, {
-            "if (${this.redeploy})": "redeployConfigs"
+            "if (${this.redeploy})": {
+                "redeployConfigs": {
+                    "dasNodeId": "${this.dasNodeId}"
+                }
+            }
         }, {
             "api": "env.control.ExecDockerRunCmd",
             "nodeId": "${this.dasNodeId}"
