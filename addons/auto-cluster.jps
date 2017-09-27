@@ -10,7 +10,10 @@
         "port": "28080",
         "path": "/home/jelastic/.ssh"
     },
-    "onInstall": [{
+    "onInstall": {
+        "log": "${placeholders}"
+    },
+    "onInstall_": [{
         "if (nodes.das)": [
             "cleanCluster", {
                 "localhost:4848->das:4848": {
@@ -108,13 +111,31 @@
             "envName": "${event.response.env.envName}"
         }
     },
+    "onBeforeSetCloudletCount[cp]": {
+        "if (nodes.das)": {
+            "forEach(nodes.cp)": {
+                "if (${@i.ismaster})": {
+                    "cmd[${@i.id}]": "touch $STACK_PATH/.skiprestart"
+                }
+            }
+        }
+    },
+    "onAfterSetCloudletCount[cp]": {
+        "if (nodes.das)": {
+            "cmd[das]": "$STACK_PATH/service.sh restartAllInstances"
+        }
+    },
+    "onAfterSetCloudletCount[das]": {
+        "cmd[das]": "$STACK_PATH/service.sh restart"
+    },
     "actions": {
         "cleanCluster": {
             "cmd[das]": "$STACK_PATH/service.sh clean"
         },
         "buildCluster": [{
             "addNodes": {
-                "cloudlets": 16,
+                "fixedCloudlets": "${nodes.cp.first.fixedCloudlets}",
+                "flexibleCloudlets": "${nodes.cp.first.flexibleCloudlets}",
                 "displayName": "DAS",
                 "nodeType": "docker",
                 "nodeGroup": "das",
@@ -153,16 +174,15 @@
             ]
         },
         "redeployConfigs": [{
-                "cmd[${nodes.cp.first.id}]": [
-                    "cp $STACK_PATH/glassfish/domains/domain1/config/domain.xml ${globals.path}/domain.xml"
-                ]
-            }, {
-                "cmdViaApiById": {
-                    "nodeId": "${this.dasNodeId}",
-                    "command": "mv ${globals.path}/domain.xml $STACK_PATH/glassfish/domains/domain1/config/domain.xml"
-                }
+            "cmd[${nodes.cp.first.id}]": [
+                "cp $STACK_PATH/glassfish/domains/domain1/config/domain.xml ${globals.path}/domain.xml"
+            ]
+        }, {
+            "cmdViaApiById": {
+                "nodeId": "${this.dasNodeId}",
+                "command": "mv ${globals.path}/domain.xml $STACK_PATH/glassfish/domains/domain1/config/domain.xml"
             }
-        ],
+        }],
         "exposePorts": {
             "cmd[${this.nodeId}]": [
                 "echo JELASTIC_EXPOSE=${globals.port} >> /.jelenv",
