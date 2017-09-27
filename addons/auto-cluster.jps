@@ -10,7 +10,10 @@
         "port": "28080",
         "path": "/home/jelastic/.ssh"
     },
-    "onInstall": [{
+    "onInstall": {
+        "log": "${placeholders}"
+    },
+    "onInstall_": [{
         "if (nodes.das)": [
             "cleanCluster", {
                 "localhost:4848->das:4848": {
@@ -119,7 +122,7 @@
     },
     "onAfterSetCloudletCount[cp]": {
         "if (nodes.das)": {
-            "cmd[das]": "$STACK_PATH/service.sh restartCluster"
+            "cmd[das]": "$STACK_PATH/service.sh restartAllInstances"
         }
     },
     "onAfterSetCloudletCount[das]": {
