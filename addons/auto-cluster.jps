@@ -132,7 +132,7 @@
         "buildCluster": [{
             "addNodes": {
                 "fixedCloudlets": "${nodes.cp.first.fixedCloudlets}",
-                "flexibleCloudlets": "${nodes.cp.first.flexibleCloudlets}",
+                "flexibleCloudlets": 16,
                 "displayName": "DAS",
                 "nodeType": "docker",
                 "nodeGroup": "das",
