@@ -1,0 +1,22 @@
+{
+    "jpsVersion": "1.0",
+    "jpsType": "install",
+    "application": {
+        "id": "glassfish",
+        "name": "GlassFish 5.0",
+        "type": "java",
+        "description": {
+            "en": "GlassFish 5.0"
+        },
+        "env": {
+            "topology": {
+                "engine": "java",
+                "nodes": {
+                    "count": 1,
+                    "cloudlets": 16,
+                    "nodeType": "glassfish"
+                }
+            }
+        }
+    }
+}
