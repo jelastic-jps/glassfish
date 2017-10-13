@@ -1,194 +1,42 @@
 {
-	"jpsType": "install",
-	"jpsVersion": "0.8",
-	"application": {
-		"id": "glassfish-cluster",
-		"categories": [
-			"apps/clusters"
-		],
-		"name": "Auto Scalable GlassFish Cluster",
-		"logo": "https://github.com/jelastic-jps/glassfish/raw/master/glassfish-cluster/img/glassfish-logo.png",
-		"description": "Pre-configured and ready-to-work GlassFish Cluster with auto scaling triggers. The cluster consists of 1 DAS node, 2 Worker nodes and 1 HAProxy node as the load balancer. By default connection to the cluster is secured by Jelastic SSL.",
-		"env": {
-			"--": "--- Define Cluster Topology ----",
-			"topology": {
-				"nodes": [{
-					"cloudlets": 16,
-					"displayName": "DAS",
-					"nodeGroup": "das",
-					"docker": {
-						"image": "jelastic/glassfish:latest",
-						"env": {
-							"DAS": "true"
-						},
-						"volumes": [
-							"/home/glassfish/.ssh"
-						]
-					}
-				}, {
-					"cloudlets": 16,
-					"nodeGroup": "cp",
-					"displayName": "Worker",
-					"count": 2,
-					"docker": {
-						"image": "jelastic/glassfish:latest",
-						"links": [
-							"das:das"
-						],
-						"volumes": [
-							"/home/glassfish/.ssh"
-						],
-						"volumeMounts": {
-							"/home/glassfish/.ssh": {
-								"sourceNodeGroup": "das",
-								"readOnly": false
-							}
-						}
-					}
-				}, {
-					"cloudlets": 16,
-					"displayName": "LoadBalancer",
-					"nodeGroup": "bl",
-					"docker": {
-						"image": "jelastic/haproxy-managed-lb",
-						"volumes": [
-							"/usr/local/etc/haproxy"
-						],
-						"env": {
-							"HOSTS_PORT": "28080"
-						}
-					}
-				}],
-				"ssl": true
-			},
-			"--": "---- Handle Events ----",
-			"onBeforeScaleIn[nodeGroup:cp]": {
-				"forEach(event.response.nodes)": {
-					"execCmd": {
-						"nodeGroup": "bl",
-						"commands": "/root/lb_manager.sh --removehost ${@i.intIP}"
-					}
-				},
-				"forEach(event.response.nodes)": {
-					"execCmd": {
-						"nodeId": "${@i.id}",
-						"commands": "sudo -i -u ${USER} bash -c 'bash glassfish.sh stop'"
-					}
-				}
-			},
-			"onAfterScaleOut[nodeGroup:cp]": [{
-				"call": "addWorkerToLB"
-			}, {
-				"forEach(event.response.nodes)": {
-					"call": [{
-						"procedure": "80->28080",
-						"params": {
-							"nodeId": "${@i.id}"
-						}
-					}, {
-						"procedure": "localhost:4848->das:4848",
-						"params": {
-							"nodeId": "${@i.id}"
-						}
-					}]
-				}
-			}],
-			"onAfterSetCloudletCount[nodeGroup:cp]": {
-				"restartContainers": {
-					"nodeGroup": "${event.params.nodeGroup}"
-				}
-			},
-			"onAfterSetCloudletCount[nodeGroup:das]": {
-				"restartContainers": {
-					"nodeGroup": "${event.params.nodeGroup}"
-				}
-			}
-		},
-		"onInstall": [{
-			"restartContainers": {
-				"nodeGroup": "cp"
-			}
-		}, {
-			"call": [
-				"addWorkerToLB",
-				"80->28080", {
-					"procedure": "localhost:4848->das:4848",
-					"params": {
-						"nodeGroup": "cp"
-					}
-				}, {
-					"procedure": "localhost:4848->das:4848",
-					"params": {
-						"nodeGroup": "das"
-					}
-				},
-				"addAutoScalingTriggers",
-				"deployApp"
-			]
-		}],
-		"--": "---- Create Procedures ----",
-		"procedures": [{
-			"id": "deployApp",
-			"onCall": {
-				"execCmd": {
-					"nodeGroup": "das",
-					"commands": [
-						"sudo -u ${USER} wget -O ${HOME_DIR}/clusterjsp.ear https://github.com/jelastic-jps/glassfish/blob/master/glassfish-cluster/test-app/clusterjsp.ear?raw=1",
-						"while (true); do fuser -n tcp 4848 && { sudo -u ${USER} ${HOME_DIR}/glassfish4/bin/asadmin --user=admin --passwordfile=${PSWD_FILE} deploy --target cluster1 ${HOME_DIR}/clusterjsp.ear; break; } || sleep 2s; done"
-					]
-				}
-			}
-		}, {
-			"id": "addWorkerToLB",
-			"onCall": {
-				"forEach(nodes.cp)": {
-					"execCmd": {
-						"nodeGroup": "bl",
-						"commands": "/root/lb_manager.sh --addhosts ${@i.intIP}"
-					}
-				}
-			}
-		}, {
-			"id": "addAutoScalingTriggers",
-			"onCall": {
-				"execScript": {
-					"type": "js",
-					"script": "https://github.com/jelastic-jps/glassfish/blob/master/glassfish-cluster/scripts/add-triggers.js?raw=1",
-					"params": {
-						"nodeGroup": "cp",
-						"resourceType": "MEM",
-						"scaleUpValue": 70,
-						"scaleUpLimit": 10,
-						"scaleUpLoadPeriod": 1,
-						"scaleDownValue": 40,
-						"scaleDownLimit": 2,
-						"scaleDownLoadPeriod": 10,
-						"cleanOldTriggers": true
-					}
-				}
-			}
-		}, {
-			"id": "80->28080",
-			"onCall": {
-				"execCmd": {
-					"nodeGroup": "cp",
-					"nodeId": "${this.nodeId}",
-					"commands": "iptables -t nat -I PREROUTING -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 28080 && iptables-save > /etc/iptables.rules"
-				}
-			}
-		}, {
-			"id": "localhost:4848->das:4848",
-			"onCall": [{
-				"execCmd": {
-					"nodeGroup": "${this.nodeGroup}",
-					"nodeId": "${this.nodeId}",
-					"commands": "sed -i \"s/http:\\/\\/localhost:4848/https:\\/\\/${nodes.das.first.nodeType}${nodes.das.first.id}-${env.domain}:4848/g\" ${HOME_DIR}/glassfish4/glassfish/domains/domain1/docroot/index.html"
-				}
-			}]
-		}],
-		"success": {
-			"text": "<table style='font-size:14px'><tr><td>Admin Console:</td><td><a href='${nodes.das.first.adminUrl}:4848' target='_blank'>${nodes.das.first.adminUrl}:4848</a></td></tr><tr><td>Login:</td><td><b>admin</b></td></tr><tr><td>Password:</td><td><b>glassfish</b></td></tr></table>",
-			"email": "<table><tr><td>Admin Console:</td><td><a href='${nodes.das.first.adminUrl}:4848' target='_blank'>${nodes.das.first.adminUrl}:4848</a></td></tr><tr><td>Login:</td><td><b>admin</b></td></tr><tr><td>Password:</td><td><b>glassfish</b></td></tr></table>"
-		}
-	}
+    "jpsType": "install",
+    "jpsVersion": "0.9",
+    "id": "glassfish-cluster-native",
+    "categories": [
+        "apps/clusters"
+    ],
+    "name": "Auto Scalable GlassFish Cluster",
+    "logo": "https://github.com/jelastic-jps/glassfish/raw/master/glassfish-cluster/img/glassfish-logo.png",
+    "description": "Pre-configured and ready-to-work GlassFish Cluster with auto scaling triggers. The cluster consists of 1 DAS node, 2 Worker nodes and 1 NGINX node as the load balancer. By default connection to the cluster is secured by Jelastic SSL.",
+    "nodes": [{
+        "cloudlets": 8,
+        "nodeGroup": "bl",
+        "nodeType": "nginx"
+    }, {
+        "cloudlets": 16,
+        "nodeGroup": "cp",
+        "displayName": "Worker",
+        "count": 2,
+        "nodeType": "glassfish"
+    }],
+    "ssl": true,
+    "onInstall": [
+        "addAutoScalingTriggers"
+    ],
+    "actions": {
+        "addAutoScalingTriggers": {
+            "script": "https://github.com/jelastic-jps/glassfish/blob/master/glassfish-cluster/scripts/add-triggers.js?raw=1",
+            "params": {
+                "nodeGroup": "cp",
+                "resourceType": "MEM",
+                "scaleUpValue": 70,
+                "scaleUpLimit": 10,
+                "scaleUpLoadPeriod": 1,
+                "scaleDownValue": 40,
+                "scaleDownLimit": 2,
+                "scaleDownLoadPeriod": 10,
+                "cleanOldTriggers": true
+            }
+        }
+    }
 }
