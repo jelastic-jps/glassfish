@@ -54,11 +54,3 @@ To instantly host your own scalable GF cluster, click the **Deploy to Jelastic**
 
 If working within Jelastic Private Cloud, copy link to the **_manifest.jps_** file above and [import](https://docs.jelastic.com/environment-import) it to the required Jelastic installation. 
 
-
-## Managing Your GlassFish Cluster
-
-
-Subsequently, in order to access cluster _Domain Administration Server_ control panel, you’ll need to add the **_:4848_** port to the DAS container link (or just click the _Admin Console_ URL within the received email notification).
-
-
-Also, you can check your GlassFish cluster operability with the automatically deployed test application. For that, add the **_/clusterjsp_** suffix to the end of your environment domain name in address bar. Upon refreshing the opened page, you’ll see the _Server_ IP address and domain being constantly changed - this means the corresponding _Worker Nodes_ are up and load balancing inside the cluster works properly.
