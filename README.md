@@ -15,12 +15,9 @@ Due to the native GlassFish clustering architecture, its topology includes three
 ![GlassFish cluster scheme](/glassfish-cluster/img/gf-cluster.png)
 
 
-Current implementation of Jelastic scalable GlassFish cluster is built on top of Docker containers. This ensures additional reliability through operating each node as an isolated instance and enables simple [container update](https://docs.jelastic.com/docker-update) procedure. Here, the following two Docker templates are used:
-- [HAProxy](https://github.com/jelastic-jps/payara/tree/master/addons/haproxy-load-balancing) _Load Balancer_ template
-- [GlassFish](https://github.com/jelastic-docker/glassfish) _Worker_ and _DAS_ nodes template
+Current implementation of Jelastic scalable GlassFish cluster is built on top of Docker containers. This ensures additional reliability through operating each node as an isolated instance and enables simple [container update](https://docs.jelastic.com/docker-update) procedure. 
 
-
-Upon deploying this solution, you’ll get the already configured and ready-to-work GlassFish cluster inside the Cloud, that consists of DAS node, 2 GF application servers (workers), HAProxy load balancer and is secured by [Jelastic SSL](https://docs.jelastic.com/jelastic-ssl). For the detailed guidance on this JPS package installation and management, refer to the [GlassFish Cluster with Automatic Load Balancing](http://blog.jelastic.com/2016/08/16/how-to-configure-glassfish-cluster-with-automatic-load-balancing/) page.
+Upon deploying this solution, you’ll get the already configured and ready-to-work GlassFish cluster inside the Cloud, that consists of DAS node, 2 GF application servers (workers), NGINX load balancer and is secured by [Jelastic SSL](https://docs.jelastic.com/jelastic-ssl). For the detailed guidance on this JPS package installation and management, refer to the [GlassFish Cluster with Automatic Load Balancing](http://blog.jelastic.com/2016/08/16/how-to-configure-glassfish-cluster-with-automatic-load-balancing/) page.
 
 
 ## Auto-Scaling Configuration 
