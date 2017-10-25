@@ -125,6 +125,16 @@
     "onAfterSetCloudletCount[das]": {
         "cmd[das]": "$STACK_PATH/service.sh restart"
     },
+    "onAfterRedeployContainer[cp]": {
+        "if (nodes.das)": {
+            "forEach(event.response.responses)": {
+                "addRedirect2DasAdmin": {
+                    "nodeId": "${@i.nodeid}",
+                    "dasNodeId": "${nodes.das.first.id}"
+                }
+            }
+        }
+    },
     "actions": {
         "cleanCluster": {
             "cmd[das]": "$STACK_PATH/service.sh clean"
@@ -152,7 +162,7 @@
         }, {
             "script": [
                 "var resp = jelastic.environment.control.GetEnvInfo('${env.envName}', session)",
-                "if (resp.result != 0) return resp",                
+                "if (resp.result != 0) return resp",
                 "for (var i = 0, node; node = resp.nodes[i]; i++) {",
                 "  if (node.nodeGroup == 'das' && node.ismaster) {",
                 "    return { result: 0, onAfterReturn : {configureVolumesAndLinks: {dasNodeId: node.id, redeploy: ${this.redeploy} }}}",
