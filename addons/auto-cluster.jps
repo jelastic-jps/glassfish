@@ -137,7 +137,10 @@
     },
     "actions": {
         "cleanCluster": {
-            "cmd[das]": "$STACK_PATH/service.sh clean"
+            "cmdViaApiById": {
+                "nodeId": "${nodes.das.first.id}",
+                "command": "$STACK_PATH/service.sh clean"
+            }
         },
         "buildCluster": [{
             "addNodes": {
