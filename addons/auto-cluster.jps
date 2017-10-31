@@ -102,12 +102,16 @@
             "dasNodeId": "${nodes.das.first.id}"
         }
     },
-    "onAfterClone": {
+    "onAfterClone": [{
+        "api": "environment.control.SendEnvCreatedEmail",
+        "appid": "${event.response.env.appid}",
+        "isImport": true
+    }, {
         "install": {
             "jps": "${baseUrl}/auto-cluster.jps?_r=${fn.random}",
             "envName": "${event.response.env.envName}"
         }
-    },
+    }],
     "onBeforeSetCloudletCount[cp]": {
         "if (nodes.das)": {
             "forEach(nodes.cp)": {
