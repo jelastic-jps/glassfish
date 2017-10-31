@@ -5,7 +5,7 @@
     "name": "GlassFish Cluster",
     "logo": "https://github.com/jelastic-jps/glassfish/raw/master/glassfish-cluster/img/glassfish-logo.png",
     "description": "Transforms standalone nodes to cluster",
-    "baseUrl": "https://raw.githubusercontent.com/siruslan/glassfish/master/addons",
+    "baseUrl": "https://raw.githubusercontent.com/jelastic-jps/glassfish/master/addons",
     "globals": {
         "port": "28080",
         "path": "/home/jelastic/.ssh"
