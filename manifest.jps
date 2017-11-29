@@ -14,7 +14,7 @@
         "nodeGroup": "bl",
         "nodeType": "nginx"
     }, {
-        "cloudlets": 16,
+        "cloudlets": 8,
         "nodeGroup": "cp",
         "displayName": "Worker",
         "count": 2,
