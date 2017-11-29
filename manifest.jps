@@ -20,7 +20,7 @@
         "count": 2,
         "nodeType": "glassfish"
     }],
-    "ssl": true,
+    "ssl": false,
     "onInstall": [
         "addAutoScalingTriggers"
     ],
