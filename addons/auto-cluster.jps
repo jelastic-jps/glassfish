@@ -10,6 +10,9 @@
         "port": "28080",
         "path": "/home/jelastic/.ssh"
     },
+    "nodeGroupAlias": {
+        "${targetNodes.nodeGroup}": "cp"
+    },
     "onInstall": [{
         "if (nodes.das)": [
             "cleanCluster", {
