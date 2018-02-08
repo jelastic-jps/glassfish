@@ -23,8 +23,7 @@
             }, {
                 "forEach(nodes.cp)": [{
                     "exposePortsAndUpdateLink2Das": {
-                        "nodeId": "${@i.id}",
-                        "dasNodeId": "${nodes.das.first.id}"
+                        "nodeId": "${@i.id}"
                     }
                 }, {
                     "if ('${nodes.cp.first.nodeType}'.indexOf('payara') > -1)": {
@@ -33,11 +32,9 @@
                         }
                     }
                 }]
-            }, "restartContainers[cp]", {
-                "restartRequired": {
-                    "dasNodeId": "${nodes.das.first.id}"
-                }
-            }
+            },
+            "restartContainers[cp]",
+            "restartRequired"
         ]
     }, {
         "if (!nodes.das)": {
@@ -64,8 +61,7 @@
                     }
                 }, {
                     "exposePortsAndUpdateLink2Das": {
-                        "nodeId": "${@i.id}",
-                        "dasNodeId": "${nodes.das.first.id}"
+                        "nodeId": "${@i.id}"
                     }
                 },
                 "restartContainers[${@i.id}]"
@@ -103,11 +99,7 @@
     }],
     "onBeforeSetCloudletCount[cp]": {
         "if (nodes.das)": {
-            "forEach(nodes.cp)": {
-                "if (${@i.ismaster})": {
-                    "cmd[${@i.id}]": "touch $STACK_PATH/.skiprestart"
-                }
-            }
+            "cmd[${nodes.cp.master.id}]": "touch $STACK_PATH/.skiprestart"
         }
     },
     "onAfterSetCloudletCount[cp]": {
@@ -122,8 +114,7 @@
         "if (nodes.das)": {
             "forEach(event.response.responses)": {
                 "addRedirect2DasAdmin": {
-                    "nodeId": "${@i.nodeid}",
-                    "dasNodeId": "${nodes.das.first.id}"
+                    "nodeId": "${@i.nodeid}"
                 }
             }
         }
@@ -138,8 +129,7 @@
                 "flexibleCloudlets": "${nodes.cp.first.flexibleCloudlets}",
                 "displayName": "DAS",
                 "nodeType": "${nodes.cp.first.nodeType}",
-                "nodeTag": "${nodes.cp.first.version}",
-                "nodeVersion": "${nodes.cp.first.version}",
+                "tag": "${nodes.cp.first.version}",
                 "nodeGroup": "das",
                 "metadata": {
                     "layer": "das"
@@ -166,7 +156,7 @@
         "redeployConfigs": [{
             "cmd[${nodes.cp.first.id}]": "cp $STACK_PATH/glassfish/domains/domain1/config/domain.xml ${globals.path}/domain.xml"
         }, {
-            "cmd[${this.dasNodeId}]": "mv ${globals.path}/domain.xml $STACK_PATH/glassfish/domains/domain1/config/domain.xml"
+            "cmd[das]": "mv ${globals.path}/domain.xml $STACK_PATH/glassfish/domains/domain1/config/domain.xml"
         }],
         "exposePorts": {
             "cmd[${this.nodeId}]": [
@@ -191,19 +181,18 @@
         }, {
             "localhost:4848->das:4848": {
                 "nodeId": "${this.nodeId}",
-                "dasNodeId": "${this.dasNodeId}"
+                "dasNodeId": "${nodes.das.first.id}"
             }
         }, {
             "addRedirect2DasAdmin": {
-                "nodeId": "${this.nodeId}",
-                "dasNodeId": "${this.dasNodeId}"
+                "nodeId": "${this.nodeId}"
             }
         }],
         "addRedirect2DasAdmin": {
             "cmd[${this.nodeId}]": [
                 "d=com/sun/enterprise/v3/admin/adapter",
                 "mkdir -p $d",
-                "echo '<html><head><meta http-equiv=\"refresh\" content=\"0;url=https://node${this.dasNodeId}-${env.domain}:4848/\" /></head></html>' > $d/statusNotDAS.html",
+                "echo '<html><head><meta http-equiv=\"refresh\" content=\"0;url=https://node${nodes.das.first.id}-${env.domain}:4848/\" /></head></html>' > $d/statusNotDAS.html",
                 "jar uf $STACK_PATH/glassfish/modules/kernel.jar $d/statusNotDAS.html",
                 "rm -rf com"
             ]
@@ -234,8 +223,7 @@
                     "groupAlias": "das"
                 }, {
                     "exposePortsAndUpdateLink2Das": {
-                        "nodeId": "${@i.id}",
-                        "dasNodeId": "${nodes.das.first.id}"
+                        "nodeId": "${@i.id}"
                     }
                 }, {
                     "if ('${nodes.cp.first.nodeType}'.indexOf('payara') > -1)": {
@@ -250,11 +238,7 @@
                     "dasNodeId": "${nodes.das.first.id}"
                 }
             }, {
-                "if (${this.redeploy})": {
-                    "redeployConfigs": {
-                        "dasNodeId": "${nodes.das.first.id}"
-                    }
-                }
+                "if (${this.redeploy})": "redeployConfigs"
             }, {
                 "api": "env.control.ExecDockerRunCmd",
                 "nodeId": "${nodes.das.first.id}"
