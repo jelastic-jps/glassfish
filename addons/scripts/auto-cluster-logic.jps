@@ -168,15 +168,10 @@
                 "startService": false
             }
         }, {
-            "script": [
-                "var resp = jelastic.environment.control.GetEnvInfo('${env.envName}', session)",
-                "if (resp.result != 0) return resp",
-                "for (var i = 0, node; node = resp.nodes[i]; i++) {",
-                "  if (node.nodeGroup == 'das' && node.ismaster) {",
-                "    return { result: 0, onAfterReturn : {configureVolumesAndLinks: {dasNodeId: node.id, redeploy: ${this.redeploy} }}}",
-                "  }",
-                "}"
-            ]
+            "configureVolumesAndLinks": {
+                "dasNodeId": "${nodes.das.master.id}",
+                "redeploy": "${this.redeploy}"
+            }
         }],
         "restartRequired": {
             "cmdViaApiById": {
@@ -255,11 +250,7 @@
             }]
         },
         "configureVolumesAndLinks": [{
-            "forEach(nodes.cp)": {
-                "if (${@i.ismaster})": {
-                    "cmd[${@i.id}]": "cp $PSWD_FILE ~/pswd"
-                }
-            }
+            "cmd[${nodes.cp.master.id}]": "cp $PSWD_FILE ~/pswd"
         }, {
             "api": "env.control.AddContainerVolumeByGroup",
             "nodeGroup": "cp",
@@ -274,13 +265,9 @@
             "name": "SSH Keys",
             "readOnly": false
         }, {
+            "cmd[${nodes.cp.master.id}]": "mv ~/pswd ${PSWD_FILE}.old"
+        }, {
             "forEach(nodes.cp)": [{
-                "if (${@i.ismaster})": {
-                    "cmd[${@i.id}]": [
-                        "mv ~/pswd ${PSWD_FILE}.old"
-                    ]
-                }
-            }, {
                 "api": "env.control.LinkDockerNodes",
                 "sourceNodeId": "${this.dasNodeId}",
                 "targetNodeId": "${@i.id}",
