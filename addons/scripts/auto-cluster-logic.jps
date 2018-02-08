@@ -152,7 +152,9 @@
                 "fixedCloudlets": "${nodes.cp.first.fixedCloudlets}",
                 "flexibleCloudlets": "${nodes.cp.first.flexibleCloudlets}",
                 "displayName": "DAS",
-                "nodeType": "${nodes.cp.first.customitem.dockerName}",
+                "nodeType": "${nodes.cp.first.nodeType}",
+                "nodeTag": "${nodes.cp.first.version}",
+                "nodeVersion": "${nodes.cp.first.version}",
                 "nodeGroup": "das",
                 "metadata": {
                     "layer": "das"
