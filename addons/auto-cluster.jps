@@ -1,7 +1,7 @@
 {
     "jpsType": "update",
     "jpsVersion": "0.99",
-    "id": "glassfish-cluster-addon",
+    "id": "glassfish-cluster-addon-logic",
     "name": "GlassFish Cluster",
     "logo": "https://github.com/jelastic-jps/glassfish/raw/master/glassfish-cluster/img/glassfish-logo.png",
     "description": "Transforms standalone nodes to cluster",
