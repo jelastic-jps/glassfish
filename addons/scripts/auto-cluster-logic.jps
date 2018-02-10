@@ -138,6 +138,14 @@
                 "startService": false
             }
         }, {
+            "api": "env.control.SetNodeGroupDisplayName",
+            "nodeGroup": "das",
+            "displayName": "DAS"
+        }, {
+            "api": "env.control.SetNodeGroupDisplayName",
+            "nodeGroup": "cp",
+            "displayName": "Workers"
+        }, {
             "configureVolumesAndLinks": {
                 "redeploy": "${this.redeploy}"
             }
