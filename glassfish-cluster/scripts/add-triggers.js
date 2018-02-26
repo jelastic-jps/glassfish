@@ -12,6 +12,10 @@ if (nMaxSameNodes < scaleUpLimit) {
     scaleUpLimit = nMaxSameNodes;
 }
 
+if (scaleUpLimit <= scaleDownValue) {
+    scaleDownValue = scaleUpLimit - 1;
+}
+
 if (cleanOldTriggers) {
     var actions = ['ADD_NODE', 'REMOVE_NODE'];
     for (var i = 0; i < actions.length; i++) {
