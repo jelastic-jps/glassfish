@@ -12,18 +12,20 @@ if (nMaxSameNodes < scaleUpLimit) {
     scaleUpLimit = nMaxSameNodes;
 }
 
-if (scaleUpLimit <= scaleDownValue) {
-    scaleDownValue = scaleUpLimit - 1;
+if (scaleUpLimit <= scaleDownLimit) {
+    scaleDownLimit = scaleUpLimit - 1;
 }
+
+var envName = '${env.envName}';
 
 if (cleanOldTriggers) {
     var actions = ['ADD_NODE', 'REMOVE_NODE'];
     for (var i = 0; i < actions.length; i++) {
-        var array = jelastic.env.trigger.GetTriggers(appid, session, actions[i]).array;
-        for (var j = 0; j < array.length; j++) jelastic.env.trigger.DeleteTrigger(appid, session, array[j].id);
+        var array = jelastic.env.trigger.GetTriggers(envName, session, actions[i]).array;
+        for (var j = 0; j < array.length; j++) jelastic.env.trigger.DeleteTrigger(envName, session, array[j].id);
     }
 }
-var envName = '${env.envName}';
+
 var data = {
     "isEnabled": true,
     "name": "scale-up",
