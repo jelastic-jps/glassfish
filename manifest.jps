@@ -25,7 +25,7 @@
     ],
     "actions": {
         "addAutoScalingTriggers": {
-            "script": "https://github.com/jelastic-jps/glassfish/blob/master/glassfish-cluster/scripts/add-triggers.js?raw=1&_r=${fn.random}",
+            "script": "https://raw.githubusercontent.com/jelastic-jps/glassfish/master/glassfish-cluster/scripts/add-triggers.js?raw=1&_r=${fn.random}",
             "params": {
                 "nodeGroup": "cp",
                 "resourceType": "MEM",
