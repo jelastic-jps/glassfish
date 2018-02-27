@@ -46,7 +46,7 @@ In case you’d like to change the conditions of automatic nodes’ scaling, ref
 To instantly host your own scalable GF cluster, click the **GET IT HOSTED** button below. Within the opened frame, specify your email address, choose one of the [Jelastic Public Cloud providers](https://jelastic.cloud/) and press **Install**.
 
 
-[![GET IT HOSTED](https://raw.githubusercontent.com/jelastic-jps/jpswiki/master/images/getithosted.png)](https://jelastic.com/install-application/?manifest=https://raw.githubusercontent.com/jelastic-jps/glassfish/master/manifest.jps&keys=app.jelastic.eapps.com;app.jelastic.saveincloud.net)
+[![GET IT HOSTED](https://raw.githubusercontent.com/jelastic-jps/jpswiki/master/images/getithosted.png)](https://jelastic.com/install-application/?manifest=https://raw.githubusercontent.com/jelastic-jps/glassfish/master/manifest.jps&keys=app.jelastic.eapps.com;app.jelastic.saveincloud.net;app.jelastic.saveincloud.net;app.mircloud.host)
 
 ### Private Cloud
 
