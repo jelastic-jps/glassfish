@@ -10,14 +10,14 @@
         "script": [
             "version = jelastic.system.service.GetVersion().version.split('-').shift()",
             "jps = compareVersions(version, '5.4') == -1 ? 'scripts/legacy/auto-cluster-5.0-5.3.jps' : 'scripts/auto-cluster-logic.jps'",
-            "return {result: 0, onAfterReturn: {installLogic: jps}}",
+            "return {result: 0, onAfterReturn: {installLogic: {jps:jps}}}",
             "function compareVersions(a, b) {a = a.split('.'), b = b.split('.'); for (var i = 0, l = Math.max(a.length, b.length); i < l; i++) {x = parseInt(a[i], 10) || 0; y = parseInt(b[i], 10) || 0; if (x != y) return x > y ? 1 : -1 }; return 0;}"
         ]
     },
     "actions": {
         "installLogic": {
             "install": {
-                "jps": "${baseUrl}/${this}?_r=${fn.random}",
+                "jps": "${baseUrl}/${this.jps}?_r=${fn.random}",
                 "envName": "${env.envName}",
                 "nodeGroup": "${targetNodes.nodeGroup}"
             }
