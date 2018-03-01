@@ -1,20 +1,12 @@
 //@auth
 //@req(nodeGroup, resourceType, cleanOldTriggers, scaleUpValue, scaleUpLimit, scaleUpLoadPeriod, scaleDownValue, scaleDownLimit, scaleDownLoadPeriod)
-var nMaxSameNodes, oResp;
 
-oResp = jelastic.billing.account.GetQuotas('environment.maxsamenodescount').array[0];
+var resp = jelastic.billing.account.GetQuotas('environment.maxsamenodescount');
+if (resp.result != 0) return resp;
+var nMaxSameNodes = resp.array[0] && resp.array[0].value ? resp.array[0].value : 1000;
 
-if (oResp && oResp.value) {
-    nMaxSameNodes = oResp.value;
-}
-
-if (nMaxSameNodes < scaleUpLimit) {
-    scaleUpLimit = nMaxSameNodes;
-}
-
-if (scaleUpLimit <= scaleDownLimit) {
-    scaleDownLimit = scaleUpLimit - 1;
-}
+if (nMaxSameNodes < scaleUpLimit) scaleUpLimit = nMaxSameNodes;
+if (scaleUpLimit <= scaleDownLimit) return {result:0, warning: 'autoscaling triggers have not been added due to upLimit ['+scaleUpLimit+'] <= downLimit ['+scaleDownLimit+']'}
 
 var envName = '${env.envName}';
 
