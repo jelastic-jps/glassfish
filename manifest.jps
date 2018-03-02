@@ -13,7 +13,7 @@
         "nodeGroup": "bl",
         "nodeType": "nginx"
     }, {
-        "cloudlets": 16,
+        "cloudlets": 8,
         "nodeGroup": "cp",
         "displayName": "Worker",
         "count": 2,
@@ -25,7 +25,7 @@
     ],
     "actions": {
         "addAutoScalingTriggers": {
-            "script": "https://github.com/jelastic-jps/glassfish/blob/master/glassfish-cluster/scripts/add-triggers.js?raw=1",
+            "script": "https://raw.githubusercontent.com/jelastic-jps/glassfish/master/glassfish-cluster/scripts/add-triggers.js?raw=1&_r=${fn.random}",
             "params": {
                 "nodeGroup": "cp",
                 "resourceType": "MEM",
