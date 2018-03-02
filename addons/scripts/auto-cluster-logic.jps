@@ -14,7 +14,7 @@ globals:
   
 nodeGroupAlias:
   "${targetNodes.nodeGroup}": cp
-  
+   
 onInstall:
 - if ('${nodes.cp.first.nodeType}'.indexOf('payara') > -1):
     setGlobals:
@@ -122,8 +122,7 @@ actions:
     cmd[${nodes.cp.first.id}]: "$STACK_PATH/service.sh redeploy"
     
   redeployConfigs:
-  - cmd[${nodes.cp.first.id}]: cp $STACK_PATH/glassfish/domains/domain1/config/domain.xml; ls -l ${globals.path}
-      ${globals.path}/domain.xml
+  - cmd[${nodes.cp.first.id}]: cp $STACK_PATH/glassfish/domains/domain1/config/domain.xml ${globals.path}/domain.xml; ls -l ${globals.path}
   - cmd[das]: ls -l ${globals.path}; mv ${globals.path}/domain.xml $STACK_PATH/glassfish/domains/domain1/config/domain.xml
   exposePorts:
     cmd[${this}]:
@@ -149,13 +148,12 @@ actions:
   - addRedirect2DasAdmin: "${this}"
   
   addRedirect2DasAdmin:
-    cmd[${this}]: |
-      d=com/sun/enterprise/v3/admin/adapter
-      mkdir -p $d
-      echo '<html><head><meta http-equiv="refresh" content="0;url=https://node${nodes.das.first.id}-${env.domain}:4848/"
-      /></head></html>' > $d/statusNotDAS.html
-      jar uf $STACK_PATH/glassfish/modules/kernel.jar $d/statusNotDAS.html
-      rm -rf com
+    cmd[${this}]: 
+      - d=com/sun/enterprise/v3/admin/adapter
+      - mkdir -p $d
+      - echo '<html><head><meta http-equiv="refresh" content="0;url=https://node${nodes.das.first.id}-${env.domain}:4848/"/></head></html>' > $d/statusNotDAS.html
+      - jar uf $STACK_PATH/glassfish/modules/kernel.jar $d/statusNotDAS.html
+      - rm -rf com
       
   configureVolumesAndLinks:
   - cmd[${nodes.cp.master.id}]: cp $PSWD_FILE ~/pswd
