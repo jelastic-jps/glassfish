@@ -18,6 +18,8 @@ onInstall:
 actions:
   installLogic:
     install:
-      jps: "${baseUrl}/${this.jps}?_r=${fn.random}"
-      envName: "${env.envName}"
-      nodeGroup: "${this.nodeGroup}"
+      jps: ${baseUrl}/${this.jps}?_r=${fn.random}
+      envName: ${env.envName}
+      nodeGroup: ${this.nodeGroup}
+      settings:
+        baseUrl: ${baseUrl}
