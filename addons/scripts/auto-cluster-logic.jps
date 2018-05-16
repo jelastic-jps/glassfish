@@ -115,17 +115,19 @@ actions:
       
   restartRequired:
     cmd[das]: $STACK_PATH/service.sh restartRequired
-  redeployApps:
-    cmd[${nodes.cp.first.id}]: $STACK_PATH/service.sh redeploy
     
-  redeployConfigs:
-  - cmd[${nodes.cp.first.id}]: cp $STACK_PATH/glassfish/domains/domain1/config/domain.xml ${globals.path}/domain.xml; ls -l ${globals.path}
-  - cmd[das]: ls -l ${globals.path}; mv ${globals.path}/domain.xml $STACK_PATH/glassfish/domains/domain1/config/domain.xml
+  redeployConfigsAndApps:
+  - cmd[${nodes.cp.first.id}]: 
+      cp $STACK_PATH/glassfish/domains/domain1/config/domain.xml ${globals.path}/domain.xml
+      cp -r $STACK_PATH/glassfish/domains/domain1/applications/__internal ${globals.path}      
+  - cmd[das]: |-
+      mv ${globals.path}/domain.xml $STACK_PATH/glassfish/domains/domain1/config/domain.xml
+      mv ${globals.path}/__internal $STACK_PATH/glassfish/domains/domain1/applications
+      
   exposePorts:
     cmd[${this}]:
     - echo JELASTIC_EXPOSE=${globals.port} >> /.jelenv
-    - iptables -t nat -I PREROUTING -p tcp -m tcp --dport 4848 -j REDIRECT --to-ports
-      24848
+    - iptables -t nat -I PREROUTING -p tcp -m tcp --dport 4848 -j REDIRECT --to-ports 24848
     user: root
     
   addHost2Hazelcast:
@@ -145,12 +147,12 @@ actions:
   - addRedirect2DasAdmin: ${this}
   
   addRedirect2DasAdmin:
-    cmd[${this}]: 
-      - d=com/sun/enterprise/v3/admin/adapter
-      - mkdir -p $d
-      - echo '<html><head><meta http-equiv="refresh" content="0;url=https://node${nodes.das.first.id}-${env.domain}:4848/"/></head></html>' > $d/statusNotDAS.html
-      - jar uf $STACK_PATH/glassfish/modules/kernel.jar $d/statusNotDAS.html
-      - rm -rf com
+    cmd[${this}]: |-
+      d=com/sun/enterprise/v3/admin/adapter
+      mkdir -p $d
+      echo '<html><head><meta http-equiv="refresh" content="0;url=https://node${nodes.das.first.id}-${env.domain}:4848/"/></head></html>' > $d/statusNotDAS.html
+      jar uf $STACK_PATH/glassfish/modules/kernel.jar $d/statusNotDAS.html
+      rm -rf com
       
   configureVolumesAndLinks:
   - cmd[${nodes.cp.master.id}]: cp $PSWD_FILE ~/pswd
@@ -178,9 +180,8 @@ actions:
   - localhost:4848->das:4848:
       nodeId: ${nodes.das.first.id}
       dasNodeId: ${nodes.das.first.id}
-  - if (${this.redeploy}): redeployConfigs
+  - if (${this.redeploy}): redeployConfigsAndApps
   - api: env.control.ExecDockerRunCmd
     nodeId: ${nodes.das.first.id}
-  - if (${this.redeploy}): redeployApps
   - restartContainers[cp]
   - restartRequired
