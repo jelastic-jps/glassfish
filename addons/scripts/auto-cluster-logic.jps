@@ -122,10 +122,10 @@ actions:
   copyConfigsAndApps:
   - cmd[${nodes.cp.first.id}]: |-
       cp $STACK_PATH/glassfish/domains/domain1/config/domain.xml ${globals.path}/domain.xml
-      cp -r $STACK_PATH/glassfish/domains/domain1/applications/__internal ${globals.path}
+      cp -r $STACK_PATH/glassfish/domains/domain1/applications ${globals.path}
   - cmd[das]: |-
       mv ${globals.path}/domain.xml $STACK_PATH/glassfish/domains/domain1/config/domain.xml
-      mv ${globals.path}/__internal $STACK_PATH/glassfish/domains/domain1/applications
+      mv ${globals.path}/applications $STACK_PATH/glassfish/domains/domain1
       
   exposePorts:
     cmd[${this}]:
