@@ -115,11 +115,14 @@ actions:
       
   restartRequired:
     cmd[das]: $STACK_PATH/service.sh restartRequired
+  
+  redeployApps:
+    cmd[${nodes.cp.first.id}]: $STACK_PATH/service.sh redeploy
     
-  redeployConfigsAndApps:
-  - cmd[${nodes.cp.first.id}]: 
+  copyConfigsAndApps:
+  - cmd[${nodes.cp.first.id}]: |-
       cp $STACK_PATH/glassfish/domains/domain1/config/domain.xml ${globals.path}/domain.xml
-      cp -r $STACK_PATH/glassfish/domains/domain1/applications/__internal ${globals.path}      
+      cp -r $STACK_PATH/glassfish/domains/domain1/applications/__internal ${globals.path}
   - cmd[das]: |-
       mv ${globals.path}/domain.xml $STACK_PATH/glassfish/domains/domain1/config/domain.xml
       mv ${globals.path}/__internal $STACK_PATH/glassfish/domains/domain1/applications
@@ -180,8 +183,9 @@ actions:
   - localhost:4848->das:4848:
       nodeId: ${nodes.das.first.id}
       dasNodeId: ${nodes.das.first.id}
-  - if (${this.redeploy}): redeployConfigsAndApps
+  - if (${this.redeploy}): copyConfigsAndApps
   - api: env.control.ExecDockerRunCmd
     nodeId: ${nodes.das.first.id}
+  - if (${this.redeploy}): redeployApps  
   - restartContainers[cp]
   - restartRequired
