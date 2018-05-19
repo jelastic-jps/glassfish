@@ -83,13 +83,19 @@ onAfterRedeployContainer[cp]:
       addRedirect2DasAdmin: ${@i.nodeid}
       
 onAfterMigrate:
-  - localhost:4848->das:4848:
-      nodeId: ${nodes.das.first.id}
-      dasNodeId: ${nodes.das.first.id}
-  - localhost:4848->das:4848:
-      nodeId: cp
-      dasNodeId: ${nodes.das.first.id}      
-  - addRedirect2DasAdmin: cp
+  if (!nodes.das):
+    localhost:4848->das:4848:
+      nodeId: ${nodes.cp.first.id}
+      dasNodeId: ${nodes.cp.first.id}
+  if (nodes.das):
+    - localhost:4848->das:4848:
+        nodeId: ${nodes.das.first.id}
+        dasNodeId: ${nodes.das.first.id}
+    - localhost:4848->das:4848:
+        nodeId: cp
+        dasNodeId: ${nodes.das.first.id}      
+    - addRedirect2DasAdmin: cp
+
   
 actions:
   cleanCluster:
