@@ -82,6 +82,15 @@ onAfterRedeployContainer[cp]:
     forEach(event.response.responses):
       addRedirect2DasAdmin: ${@i.nodeid}
       
+onAfterMigrate:
+  - localhost:4848->das:4848:
+      nodeId: ${nodes.das.first.id}
+      dasNodeId: ${nodes.das.first.id}
+  - localhost:4848->das:4848:
+      nodeId: cp
+      dasNodeId: ${nodes.das.first.id}      
+  - addRedirect2DasAdmin: cp
+  
 actions:
   cleanCluster:
     cmd[${nodes.das.first.id}]: $STACK_PATH/service.sh clean
@@ -139,8 +148,10 @@ actions:
     cmd[das]: $STACK_PATH/service.sh removeHost node${this}
     
   localhost:4848->das:4848:
-    cmd[${this.nodeId}]: sed -i -e "s/http.*:\/\/.*:4848/https:\/\/node${this.dasNodeId}-${env.domain}:4848/g"
-      ${STACK_PATH}/glassfish/domains/domain1/docroot/index.html
+    cmd[${this.nodeId}]: |-
+      sed -i -e "s/http.*:\/\/.*:4848/https:\/\/node${this.dasNodeId}-${env.domain}:4848/g" ${STACK_PATH}/glassfish/domains/domain1/docroot/index.html
+      file=$(find ${STACK_PATH}/glassfish/nodes/*/*/docroot -type f -name index.html)
+      [ -n "$file" ] && { sed -i -e "s/http.*:\/\/.*:4848/https:\/\/node${this.dasNodeId}-${env.domain}:4848/g" $file; } || ':'
       
   exposePortsAndUpdateLink2Das:
   - exposePorts: ${this}
