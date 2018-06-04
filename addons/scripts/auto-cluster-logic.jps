@@ -1,0 +1,208 @@
+---
+type: update
+version: 1.5
+id: glassfish-cluster-addon
+name: GlassFish Cluster
+logo: https://github.com/jelastic-jps/glassfish/raw/master/glassfish-cluster/img/glassfish-logo.png
+description: Transforms standalone nodes to cluster
+
+globals:
+  port: 28080
+  path: /home/jelastic/.ssh
+  payara: false
+  
+nodeGroupAlias:
+  ${targetNodes.nodeGroup}: cp
+   
+onInstall:
+- if ('${nodes.cp.first.nodeType}'.indexOf('payara') > -1):
+    setGlobals:
+      payara: true
+      
+- if (nodes.das):
+  - cleanCluster
+  - localhost:4848->das:4848:
+      nodeId: ${nodes.das.first.id}
+      dasNodeId: ${nodes.das.first.id}
+  - forEach(nodes.cp):
+    - exposePortsAndUpdateLink2Das: ${@i.id}
+    - if (${globals.payara}):
+        addHost2Hazelcast: ${@i.id}
+  - restartContainers[cp]
+  - restartRequired
+  
+- if (!nodes.das):
+    if (nodes.cp.length == 1):
+      localhost:4848->das:4848:
+        nodeId: ${nodes.cp.first.id}
+        dasNodeId: ${nodes.cp.first.id}
+    if (nodes.cp.length > 1):
+      buildCluster:
+        redeploy: false
+        
+onBeforeServiceScaleOut[cp]:
+- if (nodes.das):
+    forEach(event.response.nodes):
+    - if (${globals.payara}):
+        addHost2Hazelcast: ${@i.id}
+    - exposePortsAndUpdateLink2Das: ${@i.id}
+    - restartContainers[${@i.id}]
+- if (!nodes.das):
+    buildCluster:
+      redeploy: true
+      
+onBeforeScaleIn[cp]:
+  forEach(event.response.nodes):
+  - if (${globals.payara}):
+      removeHostFromHazelcast: ${@i.id}
+  - cmd[${@i.id}]: $STACK_PATH/service.sh delete
+  
+onAfterScaleOut[cp]: restartRequired
+onAfterScaleIn[cp]: restartRequired
+
+onAfterClone:
+- install:
+    jps: ${settings.baseUrl}/auto-cluster.jps?_r=${fn.random}
+    envName: ${event.response.env.envName}
+    nodeGroup: cp    
+    
+onBeforeSetCloudletCount[cp]:
+  if (nodes.das):
+    cmd[${nodes.cp.master.id}]: touch $STACK_PATH/.skiprestart
+    
+onAfterSetCloudletCount[cp]:
+  if (nodes.das):
+    cmd[das]: $STACK_PATH/service.sh restartAllInstances
+    
+onAfterSetCloudletCount[das]:
+  cmd[das]: $STACK_PATH/service.sh restart
+  
+onAfterRedeployContainer[cp]:
+  if (nodes.das):
+    forEach(event.response.responses):
+      addRedirect2DasAdmin: ${@i.nodeid}
+      
+onAfterMigrate:
+  if (!nodes.das):
+    localhost:4848->das:4848:
+      nodeId: ${nodes.cp.first.id}
+      dasNodeId: ${nodes.cp.first.id}
+  if (nodes.das):
+    - localhost:4848->das:4848:
+        nodeId: ${nodes.das.first.id}
+        dasNodeId: ${nodes.das.first.id}
+    - localhost:4848->das:4848:
+        nodeId: cp
+        dasNodeId: ${nodes.das.first.id}      
+    - addRedirect2DasAdmin: cp
+
+  
+actions:
+  cleanCluster:
+    cmd[${nodes.das.first.id}]: $STACK_PATH/service.sh clean
+    
+  buildCluster:
+  - addNodes:
+      fixedCloudlets: ${nodes.cp.first.fixedCloudlets}
+      flexibleCloudlets: ${nodes.cp.first.flexibleCloudlets}
+      displayName: DAS
+      nodeType: ${nodes.cp.first.nodeType}
+      tag: ${nodes.cp.first.version}
+      nodeGroup: das
+      metadata:
+        layer: das
+      dockerEnvVars:
+        DAS: 'true'
+      dockerVolumes:
+      - ${globals.path}
+      startService: false
+      
+  - api: env.control.SetNodeGroupDisplayName
+    nodeGroup: das
+    displayName: DAS
+    
+  - api: env.control.SetNodeGroupDisplayName
+    nodeGroup: cp
+    displayName: Workers
+    
+  - configureVolumesAndLinks:
+      redeploy: ${this.redeploy}
+      
+  restartRequired:
+    cmd[das]: $STACK_PATH/service.sh restartRequired
+  
+  redeployApps:
+    cmd[${nodes.cp.first.id}]: $STACK_PATH/service.sh redeploy
+    
+  copyConfigsAndApps:
+  - cmd[${nodes.cp.first.id}]: |-
+      cp $STACK_PATH/glassfish/domains/domain1/config/domain.xml ${globals.path}/domain.xml
+      cp -r $STACK_PATH/glassfish/domains/domain1/applications ${globals.path}
+  - cmd[das]: |-
+      mv ${globals.path}/domain.xml $STACK_PATH/glassfish/domains/domain1/config/domain.xml
+      mv ${globals.path}/applications $STACK_PATH/glassfish/domains/domain1
+      
+  exposePorts:
+    cmd[${this}]:
+    - echo JELASTIC_EXPOSE=${globals.port} >> /.jelenv
+    - iptables -t nat -I PREROUTING -p tcp -m tcp --dport 4848 -j REDIRECT --to-ports 24848
+    user: root
+    
+  addHost2Hazelcast:
+    cmd[das]: $STACK_PATH/service.sh addHost node${this}
+  removeHostFromHazelcast:
+    cmd[das]: $STACK_PATH/service.sh removeHost node${this}
+    
+  localhost:4848->das:4848:
+    cmd[${this.nodeId}]: |-
+      sed -i -e "s/http.*:\/\/.*:4848/https:\/\/node${this.dasNodeId}-${env.domain}:4848/g" ${STACK_PATH}/glassfish/domains/domain1/docroot/index.html
+      file=$(find ${STACK_PATH}/glassfish/nodes/*/*/docroot -type f -name index.html)
+      [ -n "$file" ] && { sed -i -e "s/http.*:\/\/.*:4848/https:\/\/node${this.dasNodeId}-${env.domain}:4848/g" $file; } || ':'
+      
+  exposePortsAndUpdateLink2Das:
+  - exposePorts: ${this}
+  - localhost:4848->das:4848:
+      nodeId: ${this}
+      dasNodeId: ${nodes.das.first.id}
+  - addRedirect2DasAdmin: ${this}
+  
+  addRedirect2DasAdmin:
+    cmd[${this}]: |-
+      d=com/sun/enterprise/v3/admin/adapter
+      mkdir -p $d
+      echo '<html><head><meta http-equiv="refresh" content="0;url=https://node${nodes.das.first.id}-${env.domain}:4848/"/></head></html>' > $d/statusNotDAS.html
+      jar uf $STACK_PATH/glassfish/modules/kernel.jar $d/statusNotDAS.html
+      rm -rf com
+      
+  configureVolumesAndLinks:
+  - cmd[${nodes.cp.master.id}]: cp $PSWD_FILE ~/pswd
+  - api: env.control.AddContainerVolumeByGroup
+    nodeGroup: cp
+    path: ${globals.path}
+  - api: env.file.AddMountPointByGroup
+    nodeGroup: cp
+    path: ${globals.path}
+    protocol: nfs
+    sourcePath: ${globals.path}
+    sourceNodeId: ${nodes.das.first.id}
+    name: SSH Keys
+    readOnly: false
+  - cmd[${nodes.cp.master.id}]: mv ~/pswd ${PSWD_FILE}.old
+  - forEach(nodes.cp):
+    - api: env.control.LinkDockerNodes
+      sourceNodeId: ${nodes.das.first.id}
+      targetNodeId: ${@i.id}
+      alias: das
+      groupAlias: das
+    - exposePortsAndUpdateLink2Das: ${@i.id}
+    - if (${globals.payara}):
+        addHost2Hazelcast: ${@i.id}
+  - localhost:4848->das:4848:
+      nodeId: ${nodes.das.first.id}
+      dasNodeId: ${nodes.das.first.id}
+  - if (${this.redeploy}): copyConfigsAndApps
+  - api: env.control.ExecDockerRunCmd
+    nodeId: ${nodes.das.first.id}
+  - if (${this.redeploy}): redeployApps  
+  - restartContainers[cp]
+  - restartRequired
