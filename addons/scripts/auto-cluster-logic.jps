@@ -47,7 +47,7 @@ onBeforeServiceScaleOut[cp]:
         addHost2Hazelcast: ${@i.id}
     - exposePortsAndUpdateLink2Das: ${@i.id}
     - restartContainers[${@i.id}]
-- if (!nodes.das):
+- if (!nodes.das && nodes.cp.length > 1):
     buildCluster:
       redeploy: true
       
@@ -57,8 +57,10 @@ onBeforeScaleIn[cp]:
       removeHostFromHazelcast: ${@i.id}
   - cmd[${@i.id}]: $STACK_PATH/service.sh delete
   
-onAfterScaleOut[cp]: restartRequired
-onAfterScaleIn[cp]: restartRequired
+onAfterScaleOut[cp]:
+  if (nodes.das): restartRequired
+onAfterScaleIn[cp]:
+  if (nodes.das): restartRequired
 
 onAfterClone:
 - install:
