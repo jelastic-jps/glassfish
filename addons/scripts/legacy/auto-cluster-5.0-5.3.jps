@@ -75,7 +75,7 @@
             ]
         }
     }, {
-        "if (!nodes.das)": {
+        "if (!nodes.das && nodes.cp.length > 1)": {
             "buildCluster": {
                 "redeploy": true
             }
@@ -93,13 +93,17 @@
         }]
     },
     "onAfterScaleOut[cp]": {
-        "restartRequired": {
-            "dasNodeId": "${nodes.das.first.id}"
+        "if (nodes.das)": {
+            "restartRequired": {
+                "dasNodeId": "${nodes.das.first.id}"
+            }
         }
     },
     "onAfterScaleIn[cp]": {
-        "restartRequired": {
-            "dasNodeId": "${nodes.das.first.id}"
+        "if (nodes.das)": {
+            "restartRequired": {
+                "dasNodeId": "${nodes.das.first.id}"
+            }
         }
     },
     "onAfterClone": [{
