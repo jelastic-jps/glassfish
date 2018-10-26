@@ -32,6 +32,10 @@ onInstall:
   - restartRequired
   
 - if (!nodes.das):
+  - if (!'${:}' && '${fn.compareEngine(1.6):}' > 0):
+      buildCluster:
+        redeploy: false
+  - if (!(!'${:}' && '${fn.compareEngine(1.6):}' > 0)):
     if (nodes.cp.length == 1):
       localhost:4848->das:4848:
         nodeId: ${nodes.cp.first.id}
@@ -118,6 +122,11 @@ actions:
       dockerVolumes:
       - ${globals.path}
       startService: false
+      nodeGroupData:
+        validation:
+            maxCount: 1
+        isClusterSupport: false
+        isDeploySupport: false
       
   - api: env.control.SetNodeGroupDisplayName
     nodeGroup: das
