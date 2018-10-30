@@ -36,13 +36,13 @@ onInstall:
       buildCluster:
         redeploy: false
   - if (!(!'${:}' && '${fn.compareEngine(1.6):}' > 0)):
-    if (nodes.cp.length == 1):
-      localhost:4848->das:4848:
-        nodeId: ${nodes.cp.first.id}
-        dasNodeId: ${nodes.cp.first.id}
-    if (nodes.cp.length > 1):
-      buildCluster:
-        redeploy: false
+      - if (nodes.cp.length == 1):
+          localhost:4848->das:4848:
+            nodeId: ${nodes.cp.first.id}
+            dasNodeId: ${nodes.cp.first.id}
+      - if (nodes.cp.length > 1):
+          buildCluster:
+            redeploy: false
         
 onBeforeServiceScaleOut[cp]:
 - if (nodes.das):
