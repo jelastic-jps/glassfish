@@ -17,7 +17,8 @@
         "nodeGroup": "cp",
         "displayName": "Worker",
         "count": 2,
-        "nodeType": "glassfish"
+        "nodeType": "glassfish",
+        "cluster": true
     }],
     "ssl": false,
     "onInstall": [
