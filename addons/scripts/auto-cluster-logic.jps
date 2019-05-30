@@ -102,6 +102,30 @@ onAfterMigrate:
         dasNodeId: ${nodes.das.first.id}      
     - addRedirect2DasAdmin: cp
 
+onAfterBindSSL:
+  - if ( nodes.cp.length = 1):
+    - log: after bind SSL
+    - cmd[${nodes.das.first.id}]:
+      - mkdir -p /var/lib/jelastic/SSL/
+      - chown $STACK_USER:$STACK_USER -R /var/lib/jelastic/SSL/
+      user: root
+    - environment.file.write:
+        nodeid: ${nodes.das.first.id}
+        path: /var/lib/jelastic/SSL/customssl.conf
+        user: root
+        body: |
+          key=${event.params.cert_key}
+          intermediate=${event.params.intermediate}
+          cert=${event.params.cert}
+    - cmd[${nodes.das.first.id}]:
+      - jem ssl install
+      user: root
+
+onAfterRemoveSSL:
+  - if ( nodes.cp.length = 1):
+    - cmd[${nodes.das.first.id}]:
+      - jem ssl remove
+      user: root
   
 actions:
   cleanCluster:
@@ -125,6 +149,7 @@ actions:
       nodeGroupData:
         validation:
             maxCount: 1
+            scalingMode: STATEFUL
         isClusterSupport: false
         isDeploySupport: false
       
