@@ -19,7 +19,7 @@ onInstall:
     setGlobals:
       payara: true
       
-- if (nodes.das):
+- if (nodes.das && ${settings.clone:false}):
   - cleanCluster
   - localhost:4848->das:4848:
       nodeId: ${nodes.das.first.id}
@@ -31,18 +31,9 @@ onInstall:
   - restartContainers[cp]
   - restartRequired
   
-- if (!nodes.das):
-  - if (!'${:}' && '${fn.compareEngine(1.6):}' > 0):
-      buildCluster:
-        redeploy: false
-  - if (!(!'${:}' && '${fn.compareEngine(1.6):}' > 0)):
-      - if (nodes.cp.length == 1):
-          localhost:4848->das:4848:
-            nodeId: ${nodes.cp.first.id}
-            dasNodeId: ${nodes.cp.first.id}
-      - if (nodes.cp.length > 1):
-          buildCluster:
-            redeploy: false
+- if (!nodes.das || (nodes.das && !${settings.clone:false})):
+    buildCluster:
+      redeploy: false        
         
 onBeforeServiceScaleOut[cp]:
 - if (nodes.das):
@@ -67,10 +58,11 @@ onAfterScaleIn[cp]:
   if (nodes.das): restartRequired
 
 onAfterClone:
-- install:
-    jps: ${settings.baseUrl}/auto-cluster.jps?_r=${fn.random}
-    envName: ${event.response.env.envName}
-    nodeGroup: cp    
+  - script: delete MANIFEST.id; return {result:0, jps:MANIFEST};
+  - install[${targetNodes.nodeGroup}]: ${response.jps}
+    envName: ${event.response.env.envName}    
+    settings: 
+      clone: true    
     
 onBeforeSetCloudletCount[cp]:
   if (nodes.das):
@@ -132,37 +124,40 @@ actions:
     cmd[${nodes.das.first.id}]: $STACK_PATH/service.sh clean
     
   buildCluster:
-  - addNodes:
-      fixedCloudlets: ${nodes.cp.first.fixedCloudlets}
-      flexibleCloudlets: ${nodes.cp.first.flexibleCloudlets}
-      displayName: DAS
-      nodeType: ${nodes.cp.first.nodeType}
-      tag: ${nodes.cp.first.version}
-      nodeGroup: das
-      metadata:
-        layer: das
-      dockerEnvVars:
-        DAS: 'true'
-      dockerVolumes:
-      - ${globals.path}
-      startService: false
-      nodeGroupData:
-        validation:
-            maxCount: 1
-            scalingMode: STATEFUL
-        isClusterSupport: false
-        isDeploySupport: false
+    - if (!nodes.das):
+      #for < 5.8.1 [---
+      - addNodes:
+          fixedCloudlets: ${nodes.cp.first.fixedCloudlets}
+          flexibleCloudlets: ${nodes.cp.first.flexibleCloudlets}
+          displayName: DAS
+          nodeType: ${nodes.cp.first.nodeType}
+          tag: ${nodes.cp.first.version}
+          nodeGroup: das
+          metadata:
+            layer: das
+          dockerEnvVars:
+            DAS: 'true'
+          dockerVolumes:
+          - ${globals.path}
+          startService: false
+          nodeGroupData:
+            validation:
+                maxCount: 1
+                scalingMode: STATEFUL
+            isClusterSupport: false
+            isDeploySupport: false
+
+      - api: env.control.SetNodeGroupDisplayName
+        nodeGroup: das
+        displayName: DAS
+      # ---]
       
-  - api: env.control.SetNodeGroupDisplayName
-    nodeGroup: das
-    displayName: DAS
-    
-  - api: env.control.SetNodeGroupDisplayName
-    nodeGroup: cp
-    displayName: Workers
-    
-  - configureVolumesAndLinks:
-      redeploy: ${this.redeploy}
+    - api: env.control.SetNodeGroupDisplayName
+      nodeGroup: cp
+      displayName: Workers
+
+    - configureVolumesAndLinks:
+        redeploy: ${this.redeploy}
       
   restartRequired:
     cmd[das]: $STACK_PATH/service.sh restartRequired

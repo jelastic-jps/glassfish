@@ -1,0 +1,35 @@
+{
+  "convertable" : true,
+  "jps"         : "https://raw.githubusercontent.com/jelastic-jps/glassfish/master/addons/auto-cluster2.jps",
+  "defaultState": false,
+   "compatibleAddons": ["glassfish-cluster-addon"],
+   "nodeGroupData": {
+    "skipNodeEmails": true,
+    "scalingMode": "STATELESS",
+    "adminUrl": "",
+    "isResetServicePassword": false
+  },
+  "validation": {
+      "scalingMode": "STATELESS"
+  },
+  "description" : "<h3>Scalable Cluster with High Availability</h3>Interconnection of Payara servers with pre-configured session replication and load balancing. <a href='https://jelastic.com/blog/glassfish-payara-auto-clustering-cloud-hosting/'>Learn More</a><img width='290' height='156' src='https://raw.githubusercontent.com/jelastic/icons/master/payara/jelastic/images/tip-auto-clustering.svg?sanitize=true'>",
+  "skipOnEnvInstall": true,
+  "extraNodes": {
+    "nodeGroup": "das",
+    "nodeType": "${clusterNode.nodeType}",
+    "fixedCloudlets": "${clusterNode.fixedCloudlets}",
+    "flexibleCloudlets": "${clusterNode.flexibleCloudlets}",
+    "displayName": "DAS",
+    "count": 1,
+    "isClusterSupport": false,
+    "isDeploySupport": false,
+    "isClusterDependency": true,
+    "isResetServicePassword": "NODEGROUP",
+    "startService": false,
+    "validation": {
+      "tag": "${clusterNode.tag}",
+      "scalingMode": "STATEFUL",
+      "maxCount": 1
+    }
+  }
+}

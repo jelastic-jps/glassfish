@@ -1,0 +1,215 @@
+---
+type: update
+version: 1.6.1
+name: Auto-Clustering
+logo: https://github.com/jelastic-jps/glassfish/raw/master/glassfish-cluster/img/glassfish-logo.png
+description: 'Auto-clustering: transforming standalone nodes to cluster'
+targetNodes: none
+
+globals:
+  port: 28080
+  payara: false
+  path: /home/jelastic/.ssh
+#  pwdfile: /home/jelastic/.ssh/pwdfile
+  
+nodeGroupAlias:
+  ${settings.nodeGroup}: cp
+  
+onInstall:
+  - if ('${nodes.cp.master.nodeType}'.indexOf('payara') > -1):
+      setGlobals:
+        payara: true
+
+  - if (nodes.das): 
+    - if (${settings.clone:false}):
+      - cleanCluster
+      - if (${globals.payara}):
+          addHost2Hazelcast: ${nodes.cp.join(id,)}
+      - restartService[${nodes.cp.join(id,)}]
+      - exposePort: ${nodes.cp.join(id,)}
+      - restartRequired      
+    - else: 
+        buildCluster
+        
+  - else:
+      buildCluster
+      
+onBeforeServiceScaleOut[cp]:
+  - if (nodes.das):
+      - uploadEncFiles: 
+          ids: ${event.response.nodes.join(id,)}
+      - if (${globals.payara}):
+          addHost2Hazelcast: ${event.response.nodes.join(id,)}
+      - exposePort: ${event.response.nodes.join(id,)}
+  #for < 5.8.1 [---
+  - elif (nodes.cp.length > 1):
+      buildCluster
+      
+onBeforeScaleIn[cp]:
+  - if (${globals.payara}):
+      removeHostFromHazelcast: ${event.response.nodes.join(id,)}
+  - cmd[${event.response.nodes.join(id,)}]: jcm delete
+  
+onAfterScaleOut[cp]:
+  if (nodes.das): restartRequired
+onAfterScaleIn[cp]:
+  if (nodes.das): restartRequired
+
+onAfterClone:
+  - script: delete MANIFEST.id; return {result:0, jps:MANIFEST};
+  - install: ${response.jps}
+    envName: ${event.response.env.envName}    
+    settings: 
+      nodeGroup: ${settings.nodeGroup}      
+      clone: true    
+    
+onBeforeSetCloudletCount[cp]:
+  if (nodes.das):
+    cmd[${nodes.cp.master.id}]: touch $STACK_PATH/.skiprestart
+    
+onAfterSetCloudletCount[cp]:
+  if (nodes.das):
+    cmd[das]: jcm restartAllInstances
+    
+onAfterSetCloudletCount[das]:
+  cmd[das]: jcm restart
+        
+onAfterMigrate:
+  - cmd[cp]: |-
+      jcm addRedirect2Das "node${nodes.das.master.id}-${env.domain}:4848"
+
+onAfterResetServicePassword[das]:
+  uploadEncFiles: 
+    ids: ${nodes.cp.join(id,)}
+    mode: pswd
+  
+onAfterBindSSL:
+  - if (nodes.cp.length == 1): 
+      copySSL
+
+onAfterRemoveSSL:
+  - if (nodes.cp.length == 1):
+    - cmd[${nodes.das.master.id}]: jem ssl remove
+      user: root
+
+onAfterRedeployContainer[das]:
+    cmd[das]: jcm runStopped
+
+actions:
+  cleanCluster:
+    cmd[${nodes.das.master.id}]: jcm clean
+    
+  buildCluster:
+    #for 5.8.1+ [---
+    - if (nodes.das): 
+        env.control.AddContainerEnvVars[${nodes.das.master.id}]:
+          vars: {"DAS":"true", "PASS":"${fn.password}"}
+    # ---]
+    - else: 
+      #for < 5.8.1 [---
+      - addNodes:
+          fixedCloudlets: ${nodes.cp.master.fixedCloudlets}
+          flexibleCloudlets: ${nodes.cp.master.flexibleCloudlets}
+          displayName: DAS
+          nodeType: ${nodes.cp.master.nodeType}
+          tag: ${nodes.cp.master.version}
+          nodeGroup: das
+          metadata:
+            layer: das
+          dockerEnvVars:
+            DAS: 'true'
+          startService: false
+          nodeGroupData:
+            validation:
+                maxCount: 1
+                scalingMode: STATEFUL
+            isClusterSupport: false
+            isDeploySupport: false
+
+      - api: env.control.SetNodeGroupDisplayName
+        nodeGroup: das
+        displayName: DAS
+    # ---]
+    
+    - api: env.control.SetNodeGroupDisplayName
+      nodeGroup: cp
+      displayName: Workers
+
+    - configureLinksAndKeys
+      
+  restartRequired:
+    cmd[das]: jcm restartRequired
+  
+  redeployApps:
+    cmd[${nodes.cp.master.id}]: jcm redeploy
+    
+  copyConfigsAndApps:
+    - cmd[${nodes.cp.master.id}]: jcm copyConfigsAndApps
+
+  copySSL:
+    - cmd[${nodes.cp.master.id}]: jcm copySSL
+    - if (/^customssl\.conf.*successfully.*$/.test("${response.out}")):
+        cmd[${nodes.das.master.id}]: jcm installSSL
+        user: root
+    
+  exposePort:
+    cmd[${this}]: jcm exposePort ${globals.port}
+    user: root
+    
+  addHost2Hazelcast:
+    editHazelcast:
+      ids: ${this}
+      act: add
+  removeHostFromHazelcast:
+    editHazelcast:
+      ids: ${this}
+      act: remove
+  editHazelcast:
+    - script: |
+        var ids = "${this.ids}".split(","), cmd = [];
+        for (var i = 0; i < ids.length; i++) cmd.push("jcm ${this.act}Host node" + ids[i]); 
+        return {result: 0, onAfterReturn: {'cmd[das]': cmd.join("; ")}}
+      
+  generateSSHKeys: 
+    cmd[${nodes.das.master.id}]: jcm generateKeys
+    
+  uploadEncFiles:          
+    - cmd[${nodes.das.master.id}]: jcm getEncFiles ${this.mode:}
+    - script: |
+        var f = out.split('//////'), action = {}; 
+        action['cmd[' + ids + ']'] = ("jcm setEncFiles '" + f[0] + (f.length > 1 ? ("' '" + f[1] + "' '" + f[2] + "' '" + f[3])  : "") + "'").replace(/\n/g, "\\n");
+        return {result:0, onAfterReturn:action}
+      out: ${response.out}
+      ids: ${this.ids}
+
+  configureLinksAndKeys:  
+    - linkContainers:
+        ids: ${nodes.cp.join(id,)}
+    - generateSSHKeys
+    - uploadEncFiles: 
+        ids: ${nodes.cp.join(id,)}
+    - if (${globals.payara}):
+        addHost2Hazelcast: ${nodes.cp.join(id,)}
+    - exposePort: ${nodes.cp.join(id,)}
+    - copyConfigsAndApps
+    - api: env.control.ExecDockerRunCmd
+      nodeId: ${nodes.das.master.id}
+    - redeployApps
+    - copySSL
+    - restartContainers[${nodes.cp.join(id,)}]
+    - restartRequired
+    
+  linkContainers:     
+    script: |
+      var ids = "${this.ids}".split(","), api = [];        
+      for (var i = 0; i < ids.length; i++) 
+        api.push({
+          method: "env.control.LinkDockerNodes", 
+          params: {
+            sourceNodeId: ${nodes.das.master.id}, 
+            targetNodeId: ids[i], 
+            alias: "das", 
+            groupAlias: "das"
+          }
+        }); 
+      return {result: 0, onAfterReturn: {api:api}}
