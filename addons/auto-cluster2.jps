@@ -10,7 +10,7 @@ globals:
   port: 28080
   payara: false
   path: /home/jelastic/.ssh
-#  pwdfile: /home/jelastic/.ssh/pwdfile
+
   
 nodeGroupAlias:
   ${settings.nodeGroup}: cp
