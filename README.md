@@ -10,7 +10,6 @@ Java EE often looks like a black box when it comes to deployment, clustering and
 
 
 Due to the native GlassFish clustering architecture, its topology includes three node groups:
-- **_Load Balancer(LB)_** - intended to process all incoming requests, sent to the cluster, and distribute them between worker nodes
 - **_Worker Node(W)_** - application server to handle the required app and web services
 - **_Domain Administration Server (DAS)_** - management instance which performs centralized control of the cluster nodes and configure communication between them via SSH 
 
@@ -18,7 +17,7 @@ Due to the native GlassFish clustering architecture, its topology includes three
 
 Current implementation of Jelastic scalable GlassFish cluster is built on top of Docker containers. This ensures additional reliability through operating each node as an isolated instance and enables simple [container update](https://docs.jelastic.com/docker-update) procedure. 
 
-Upon deploying this solution, you’ll get the already configured and ready-to-work GlassFish cluster inside the Cloud, that consists of DAS node, 2 GF application servers (workers), NGINX load balancer and is secured by [Jelastic SSL](https://docs.jelastic.com/jelastic-ssl). 
+Upon deploying this solution, you’ll get the already configured and ready-to-work GlassFish cluster inside the Cloud, that consists of DAS node, 2 GF application servers (workers) and is secured by [Jelastic SSL](https://docs.jelastic.com/jelastic-ssl). 
 
 For the detailed guidance on this JPS package installation and management, refer to the [GlassFish Cluster with Automatic Load Balancing](https://jelastic.com/blog/how-to-configure-glassfish-cluster-with-automatic-load-balancing/) page.
 
@@ -31,7 +30,7 @@ GlassFish cluster package automatically adjusts a number of Worker nodes based o
 - -1 node if RAM usage < 40% for at least 10 minute
 
 
-The appropriate modifications are automatically applied to _DAS_ and _Load Balancer_ configs, and multiple application server instances are automatically interconnected that implements the commonly used clustering configuration.
+The appropriate modifications are automatically applied to _DAS_ configs, and multiple application server instances are automatically interconnected that implements the commonly used clustering configuration.
 
 
 In case you’d like to change the conditions of automatic nodes’ scaling, refer to the appropriate triggers parameters within the [Automatic Horizontal Scaling](https://docs.jelastic.com/automatic-horizontal-scaling) settings section.
