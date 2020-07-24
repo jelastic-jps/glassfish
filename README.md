@@ -14,7 +14,7 @@ Due to the native GlassFish clustering architecture, its topology includes three
 - **_Worker Node(W)_** - application server to handle the required app and web services
 - **_Domain Administration Server (DAS)_** - management instance which performs centralized control of the cluster nodes and configure communication between them via SSH 
 
-![GlassFish cluster scheme](/glassfish-cluster/img/gf-cluster.png)
+![GlassFish cluster scheme](/glassfish-cluster/img/glassfish.svg.png)
 
 Current implementation of Jelastic scalable GlassFish cluster is built on top of Docker containers. This ensures additional reliability through operating each node as an isolated instance and enables simple [container update](https://docs.jelastic.com/docker-update) procedure. 
 
