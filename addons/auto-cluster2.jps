@@ -69,10 +69,11 @@ onBeforeSetCloudletCount[cp]:
     
 onAfterSetCloudletCount[cp]:
   if (nodes.das):
-    cmd[das]: jcm restartAllInstances
-    
+    cmd[${nodes.cp.master.id}]: jcm restartAllInstances
+
 onAfterSetCloudletCount[das]:
-  cmd[das]: jcm restart
+  if ('${fn.compareEngine(1.8.1):}' < 0):
+    cmd[das]: jcm restart
         
 onAfterMigrate:
   - cmd[cp]: |-
