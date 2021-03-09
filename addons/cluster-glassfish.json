@@ -12,7 +12,7 @@
   "validation": {
       "scalingMode": "STATELESS"
   },
-  "description" : "<h3>Scalable Cluster with High Availability</h3>Interconnection of GlassFish servers with pre-configured session replication, load balancing and extra Domain Administration Server (DAS) to perform centralized control of cluster nodes. <a href='https://jelastic.com/blog/glassfish-payara-auto-clustering-cloud-hosting/'>Learn More</a><img width='270' height='340' src='https://raw.githubusercontent.com/jelastic/icons/master/glassfish/jelastic/images/tip-auto-clustering.svg?sanitize=true'>",
+  "description" : "<h3>Scalable Cluster with High Availability</h3>Interconnection of GlassFish servers with pre-configured session replication, load balancing and extra Domain Administration Server (DAS) to perform centralized control of cluster nodes. <a href='https://jelastic.com/blog/glassfish-payara-auto-clustering-cloud-hosting/'>Learn More</a><img width='270' height='330' src='https://raw.githubusercontent.com/jelastic/icons/master/glassfish/jelastic/images/tip-auto-clustering.svg?sanitize=true'>",
   "skipOnEnvInstall": true,
   "extraNodes": {
     "nodeGroup": "das",
