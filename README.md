@@ -15,7 +15,7 @@ Due to the native GlassFish clustering architecture, its topology includes three
 - **_Domain Administration Server (DAS)_** - management instance which performs centralized control of the cluster nodes and configure communication between them via SSH 
 
 <p align="left"> 
-<img src="glassfish-cluster/img/gf-cluster-new.svg" width="300">
+<img src="glassfish-cluster/img/auto-clustering-readme.svg" width="300">
 </p>
 
 Current implementation of Jelastic scalable GlassFish cluster is built on top of Docker containers. This ensures additional reliability through operating each node as an isolated instance and enables simple [container update](https://docs.jelastic.com/docker-update) procedure. 
